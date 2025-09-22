@@ -1,0 +1,133 @@
+/* Navbar wrapper */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+  position: sticky;
+  width: 100%;
+  top: 0;
+  z-index: 1000;   
+}
+
+/* Left side (logo) */
+.nav-left .logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  cursor: pointer;
+}
+
+/* Right side wrapper */
+.nav-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 70%;
+}
+
+/* Top row: search + buttons */
+.nav-right-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 20px;
+}
+
+
+
+/* Search box */
+.search {
+   position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  padding: 5px 10px;
+  transition: all 0.3s ease;
+}
+
+.search input {
+  border: none;
+  outline: none;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  width: 400px;
+}
+
+.search button {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.search:focus-within {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.4);
+}
+
+/* Buttons (login & cart) */
+.nav-btns{
+    display: flex;
+    gap: 10px;
+}
+.nav-btns button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.3s ease;
+}
+
+.nav-btns button:hover {
+  background: #2980b9;
+}
+
+/* Bottom row: navigation links */
+.nav-right-bottom ul {
+  list-style-type: none;
+  display: flex;
+  justify-content: flex-start;
+  gap: 100px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-right-bottom li {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.nav-right-bottom li:hover {
+  color: #3498db;
+}
+
+
+.search-results{
+  height: 100px;
+  width: 100%;
+  position: absolute;
+  top: 100%;   /* input ke bilkul neeche */
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000; 
+}
