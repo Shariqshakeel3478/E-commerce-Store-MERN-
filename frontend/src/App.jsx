@@ -6,6 +6,11 @@ import Sidebar from './components/Sidebar'
 import Checkout from './components/Checkout'
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Footer from './components/Footer'
+import Login from './components/Login'
+import Signup from './components/Signup'
+
+
 
 function App() {
 
@@ -28,12 +33,16 @@ function App() {
               <Slider />
               <Products products={products} setProducts={setProducts} cart={cart} setCart={setCart} />
               <Sidebar removeFromCart={removeFromCart} cart={cart} setCart={setCart} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+              <Footer />
 
             </>
           }>
 
           </Route>
-          <Route path='/checkout' element={<Checkout cart={cart} />}></Route>
+
+          <Route path='/checkout' element={<Checkout cart={cart} setCart={setCart} />}></Route>
+          <Route path='/Login' element={<Login />}></Route>
+          <Route path='/signup' element={<Signup />}></Route>
 
         </Routes>
       </Router>

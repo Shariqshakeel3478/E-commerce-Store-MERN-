@@ -119,11 +119,11 @@
 
 .search-results{
   height: 100px;
-  width: 100%;
+  width:100%;
   position: absolute;
-  top: 100%;   /* input ke bilkul neeche */
+  top: 100%;  
   left: 0;
-  right: 0;
+  right: 30px;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 6px;

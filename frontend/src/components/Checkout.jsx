@@ -1,43 +1,121 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../styles/checkout.css';
 import { useNavigate } from 'react-router-dom';
 
-export default function Checkout({ cart }) {
+export default function Checkout({ cart, setCart }) {
     const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        fullName: '',
+        email: '',
+        address: '',
+        city: '',
+        postalCode: '',
+        paymentMethod: 'cod'
+    });
 
     const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handlePlaceOrder = () => {
+        alert(`Order Placed!\nPayment: ${formData.paymentMethod}\nTotal: $${totalPrice.toFixed(2)}`);
+    };
 
     return (
         <div className="checkout-container">
             <h1>Checkout</h1>
 
             {cart.length === 0 ? (
-                <p className="empty-cart">Your cart is empty. Add some products first!</p>
+                <div>
+                    <p className="empty-cart">Your cart is empty. Add some products first!</p>
+                    <button className="back-home-btn" onClick={() => navigate('/')}>
+                        Back to Home
+                    </button>
+                </div>
             ) : (
-                <>
-                    <div className="checkout-items">
+                <div className="checkout-content">
+                    <div className="checkout-form">
+                        <h2>Billing Information</h2>
+                        <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} />
+                        <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} />
+                        <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} />
+                        <input type="text" name="city" placeholder="City" value={formData.city} onChange={handleChange} />
+                        <input type="text" name="postalCode" placeholder="Postal Code" value={formData.postalCode} onChange={handleChange} />
+
+                        <h2>Payment Method</h2>
+                        <div className="payment-options">
+                            <label>
+                                <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === 'cod'} onChange={handleChange} />
+                                Cash on Delivery
+                            </label>
+                            <label>
+                                <input type="radio" name="paymentMethod" value="credit" checked={formData.paymentMethod === 'credit'} onChange={handleChange} />
+                                Credit Card
+                            </label>
+                            <label>
+                                <input type="radio" name="paymentMethod" value="paypal" checked={formData.paymentMethod === 'paypal'} onChange={handleChange} />
+                                PayPal
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* --- Cart Summary --- */}
+                    <div className="checkout-summary">
+                        <h2>Order Summary</h2>
                         {cart.map((item, index) => (
                             <div className="checkout-item" key={index}>
                                 <img src={item.image} alt={item.name} />
                                 <div className="item-details">
                                     <h3>{item.name}</h3>
-                                    <p>Quantity: {item.quantity}</p>
+                                    <div className="quantity-controls">
+                                        <button
+                                            className="qty-btn"
+                                            onClick={() => {
+                                                setCart(prevCart =>
+                                                    prevCart.map(p =>
+                                                        p.name === item.name
+                                                            ? { ...p, quantity: p.quantity > 1 ? p.quantity - 1 : 1 }
+                                                            : p
+                                                    )
+                                                );
+                                            }}
+                                        >
+                                            −
+                                        </button>
+
+                                        <span className="qty-number">{item.quantity}</span>
+
+                                        <button
+                                            className="qty-btn"
+                                            onClick={() => {
+                                                setCart(prevCart =>
+                                                    prevCart.map(p =>
+                                                        p.name === item.name
+                                                            ? { ...p, quantity: p.quantity + 1 }
+                                                            : p
+                                                    )
+                                                );
+                                            }}
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                     <p>Price: ${item.price * item.quantity}</p>
                                 </div>
                             </div>
                         ))}
-                    </div>
 
-                    <div className="checkout-summary">
                         <h2>Total: ${totalPrice.toFixed(2)}</h2>
-                        <button className="place-order-btn" onClick={() => alert('Order Placed!')}>
+                        <button className="place-order-btn" onClick={handlePlaceOrder}>
                             Place Order
                         </button>
                         <button className="back-home-btn" onClick={() => navigate('/')}>
                             Back to Home
                         </button>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );
