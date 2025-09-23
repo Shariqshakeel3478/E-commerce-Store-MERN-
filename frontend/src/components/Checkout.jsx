@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Checkout({ cart, setCart }) {
     const navigate = useNavigate();
+    const [paymentOption, setPaymentoption] = useState('')
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -20,7 +21,23 @@ export default function Checkout({ cart, setCart }) {
     };
 
     const handlePlaceOrder = () => {
-        alert(`Order Placed!\nPayment: ${formData.paymentMethod}\nTotal: $${totalPrice.toFixed(2)}`);
+
+        const { fullName, email, address, city, postalCode, paymentMethod } = formData;
+
+
+        if (!fullName || !email || !address || !city || !postalCode) {
+            alert("Please fill all billing details before placing the order.");
+            return;
+        }
+
+        if (formData.paymentMethod === '') {
+            alert('Please select an option');
+        } else if (formData.paymentMethod === 'cod') {
+            alert('Cash on Delivery');
+        } else if (formData.paymentMethod === 'credit') {
+            alert('Payment through Card');
+        }
+
     };
 
     return (
@@ -38,11 +55,11 @@ export default function Checkout({ cart, setCart }) {
                 <div className="checkout-content">
                     <div className="checkout-form">
                         <h2>Billing Information</h2>
-                        <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} />
-                        <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} />
-                        <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} />
-                        <input type="text" name="city" placeholder="City" value={formData.city} onChange={handleChange} />
-                        <input type="text" name="postalCode" placeholder="Postal Code" value={formData.postalCode} onChange={handleChange} />
+                        <input type="text" name="fullName" placeholder="Full Name" required value={formData.fullName} onChange={handleChange} />
+                        <input type="email" name="email" required placeholder="Email" value={formData.email} onChange={handleChange} />
+                        <input type="text" name="address" required placeholder="Address" value={formData.address} onChange={handleChange} />
+                        <input type="text" name="city" required placeholder="City" value={formData.city} onChange={handleChange} />
+                        <input type="text" name="postalCode" required placeholder="Postal Code" value={formData.postalCode} onChange={handleChange} />
 
                         <h2>Payment Method</h2>
                         <div className="payment-options">
@@ -54,14 +71,11 @@ export default function Checkout({ cart, setCart }) {
                                 <input type="radio" name="paymentMethod" value="credit" checked={formData.paymentMethod === 'credit'} onChange={handleChange} />
                                 Credit Card
                             </label>
-                            <label>
-                                <input type="radio" name="paymentMethod" value="paypal" checked={formData.paymentMethod === 'paypal'} onChange={handleChange} />
-                                PayPal
-                            </label>
+
                         </div>
                     </div>
 
-                    {/* --- Cart Summary --- */}
+
                     <div className="checkout-summary">
                         <h2>Order Summary</h2>
                         {cart.map((item, index) => (

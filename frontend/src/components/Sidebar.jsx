@@ -2,7 +2,7 @@ import React from 'react'
 import '../styles/sidebar.css'
 import { useNavigate } from 'react-router-dom'
 
-export default function Sidebar({ isOpen, onClose, cart, removeFromCart }) {
+export default function Sidebar({ isOpen, onClose, cart, removeFromCart, setClicked, clicked }) {
 
     const navigate = useNavigate();
 
@@ -10,7 +10,7 @@ export default function Sidebar({ isOpen, onClose, cart, removeFromCart }) {
 
     return (
         <div className='sidebar'
-            style={{ right: isOpen ? "0" : "-350px", }}
+            style={{ right: isOpen ? "0" : "-350px" }}
         >
             <h2>Your Cart</h2>
             <button onClick={onClose}>Close</button>

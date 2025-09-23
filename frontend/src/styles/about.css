@@ -1,0 +1,52 @@
+.about-us {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60px 80px;
+  background-color: #f5faff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.about-right {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.about-right h2 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.about-right p {
+  font-size: 16px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.learn-more-btn {
+  padding: 12px 24px;
+  background-color: #1c4e6f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.learn-more-btn:hover {
+  background-color: #5a4dbc;
+}
+
+.about-left {
+  flex: 1;
+  text-align: center;
+}
+
+.about-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}

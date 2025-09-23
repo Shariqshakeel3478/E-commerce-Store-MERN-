@@ -1,5 +1,6 @@
 /* ProductCard.css */
 
+
 .product-cards{
     display: flex;
     flex-wrap: wrap;
@@ -42,7 +43,7 @@
 }
 
 .card-btn {
-  background-color: #333;
+  background-color: #1c4e6f;
   color: #fff;
   border: none;
   padding: 10px 15px;
@@ -53,7 +54,7 @@
 }
 
 .card-btn:hover {
-  background-color: #555;
+  background-color: #5a4dbc;
 }
 
 .quantity-controls {
@@ -67,7 +68,7 @@
 .qty-btn {
     padding: 5px 10px;
     font-size: 16px;
-    background-color: #007bff;
+    background-color: #1c4e6f;
     color: white;
     border: none;
     border-radius: 3px;

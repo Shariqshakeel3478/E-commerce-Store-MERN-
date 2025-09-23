@@ -20,7 +20,7 @@
 }
 
 .sidebar button {
-  background: #3498db;
+  background: #1c4e6f;
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -32,7 +32,7 @@
 }
 
 .sidebar button:hover {
-  background: #e04343;
+  background: #5a4dbc;
 }
 
 ul {

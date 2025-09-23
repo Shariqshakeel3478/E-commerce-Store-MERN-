@@ -17,11 +17,12 @@
 }
 
 .tab-btn:hover {
-  background: #f5f5f5;
+  background: #5a4dbc;
+  color: #fff;
 }
 
 .tab-btn.active {
-  background: #333;
+  background: #1c4e6f;
   color: #fff;
   border-color: #333;
 }

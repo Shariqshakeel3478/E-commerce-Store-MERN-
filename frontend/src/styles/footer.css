@@ -1,6 +1,6 @@
-/* Base */
+
 :root{
-  --bg: linear-gradient(135deg, #3498db, #4facfe); /* Gradient background */
+  --bg: linear-gradient(135deg, #1c4e6f, #4facfe); 
   --muted: #e5e7eb;
   --text: #ffffff;
   --accent: #facc15;
@@ -18,7 +18,7 @@
   margin-top: 50px;
 }
 
-/* Decorative subtle shapes */
+
 .footer::before {
   content: "";
   position: absolute;
@@ -123,8 +123,8 @@
 }
 .icon:hover{
   transform: translateY(-6px) scale(1.08);
-  background: #fff;
-  color: #2563eb;
+  background: #5a4dbc;
+  color: #fff;
   box-shadow: 0 12px 32px rgba(0,0,0,0.25);
 }
 

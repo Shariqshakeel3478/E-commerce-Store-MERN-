@@ -4,11 +4,12 @@ import '../styles/products.css'
 import Categorytab from './Categorytab'
 
 
-export default function Products({ cart, setCart, products, setProducts }) {
+export default function Products({ cart, setCart, products, setProducts, clicked, setClicked }) {
 
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState("all")
     const [addedToCart, setAddedToCart] = useState(false)
+
 
 
 
@@ -125,6 +126,7 @@ export default function Products({ cart, setCart, products, setProducts }) {
                                                         price: product.price,
                                                         image: product.image_url
                                                     });
+                                                    setClicked(true)
                                                 } else {
                                                     alert('Please Login First');
                                                 }

@@ -24,24 +24,21 @@ export default function Slider() {
     };
 
     return (
-        <div className="slider">
-            <button className="prev" onClick={prevSlide}>
-                ❮
-            </button>
-            <div className="slider-wrapper">
-                {images.map((img, index) => (
-                    <div
-                        className={`slide ${index === current ? "active" : ""}`}
-                        key={index}
-                    >
-                        <img src={img} alt={`slide-${index}`} />
-                    </div>
-                ))}
+        <section className="hero">
+            <div className="hero-content">
+                <h1>Discover Modern Living</h1>
+                <p>
+                    Upgrade your lifestyle with our curated collection of premium products.
+                    Designed for elegance, made for comfort.
+                </p>
+                <div className="hero-buttons">
+                    <button className="btn primary">Shop Now</button>
+                    <button className="btn secondary">Learn More</button>
+                </div>
             </div>
-            <button className="next" onClick={nextSlide}>
-
-                ❯
-            </button>
-        </div>
+            <div className="hero-image">
+                <img src="https://mobilo.pk/wp-content/uploads/2024/10/mobilo-mobile-shop-and-accessories-1024x959.webp" alt="Modern product" />
+            </div>
+        </section>
     );
 }
