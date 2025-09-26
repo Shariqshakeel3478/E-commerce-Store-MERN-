@@ -2,36 +2,92 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 import '../styles/products.css'
 import Categorytab from './Categorytab'
+import Swal from 'sweetalert2';
+import { useCart } from './CartContext';
 
 
-export default function Products({ cart, setCart, products, setProducts, clicked, setClicked }) {
+
+export default function Products({ products, setProducts }) {
 
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState("all")
-    const [addedToCart, setAddedToCart] = useState(false)
 
+    const [message, setMessage] = useState("");
+    const { cart, setCart } = useCart();
 
+    const addToCart = async (product) => {
+        try {
 
+            const authRes = await fetch("http://localhost:5000/check-auth", {
+                method: "GET",
+                credentials: "include"
+            });
 
-    const addToCart = (product) => {
-        setCart(prevCart => {
+            const authData = await authRes.json();
 
-            const existing = prevCart.find(item => item.name === product.name);
-            if (existing) {
-
-                return prevCart.map(item =>
-                    item.name === product.name
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item
-                );
-            } else {
-
-                return [...prevCart, { ...product, quantity: 1 }];
+            if (!authData.loggedIn) {
+                Swal.fire({
+                    title: 'Please login first',
+                    icon: 'error',
+                    timer: 1500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                });
+                return;
             }
-        });
+
+
+            const res = await fetch("http://localhost:5000/cart/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ productId: product.id })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                Swal.fire({
+                    title: "Item added to cart",
+                    icon: "success",
+                    timer: 1000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: "top-end",
+                });
+
+                setCart((prevCart) => {
+
+                    const existingItem = prevCart.find((item) => item.product_id === product.id);
+                    if (existingItem) {
+                        return prevCart.map((item) =>
+                            item.product_id === product.id
+                                ? { ...item, quantity: item.quantity + 1 }
+                                : item
+                        );
+                    } else {
+                        return [...prevCart, { ...product, product_id: product.id, quantity: 1 }];
+                    }
+                });
+
+
+
+            } else {
+                setMessage(data.message || "Failed to add item");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            setMessage("Something went wrong");
+        }
     };
 
-    console.log(cart)
+
+
+
+
+
 
     useEffect(() => {
 
@@ -47,9 +103,7 @@ export default function Products({ cart, setCart, products, setProducts, clicked
     }, [])
 
     if (loading) return <p>Loading products...</p>;
-    console.log(products)
 
-    console.log(cart)
 
     return (
 
@@ -65,13 +119,8 @@ export default function Products({ cart, setCart, products, setProducts, clicked
             <div className='product-cards'>
 
                 {
-                    products.filter((product) => {
-                        return selectedCategory === "all"
-                            ? true
-                            : product.category === selectedCategory;
-                    })
+                    products
                         .map((product) => {
-                            const cartItem = cart.find(item => item.name === product.name);
 
                             return (
                                 <div className="card" key={product.id}>
@@ -83,59 +132,7 @@ export default function Products({ cart, setCart, products, setProducts, clicked
                                     <h3 className="card-title">{product.name}</h3>
                                     <p className="card-price">{product.price}$</p>
 
-                                    {cartItem ? (
-                                        <div className="quantity-controls">
-                                            <button
-                                                onClick={() => {
-                                                    setCart(prevCart =>
-                                                        prevCart.map(item =>
-                                                            item.name === product.name
-                                                                ? {
-                                                                    ...item,
-                                                                    quantity: item.quantity > 1 ? item.quantity - 1 : 1
-                                                                }
-                                                                : item
-                                                        )
-                                                    );
-                                                }}
-                                                className="qty-btn"
-                                            >−</button>
-
-                                            <span className="qty-number">{cartItem.quantity}</span>
-
-                                            <button
-                                                onClick={() => {
-                                                    setCart(prevCart =>
-                                                        prevCart.map(item =>
-                                                            item.name === product.name
-                                                                ? { ...item, quantity: item.quantity + 1 }
-                                                                : item
-                                                        )
-                                                    );
-                                                }}
-                                                className="qty-btn"
-                                            >+</button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => {
-                                                const token = localStorage.getItem('token');
-                                                if (token) {
-                                                    addToCart({
-                                                        name: product.name,
-                                                        price: product.price,
-                                                        image: product.image_url
-                                                    });
-                                                    setClicked(true)
-                                                } else {
-                                                    alert('Please Login First');
-                                                }
-                                            }}
-                                            className="card-btn"
-                                        >
-                                            Add to Cart
-                                        </button>
-                                    )}
+                                    <button onClick={() => { addToCart(product) }} className="card-btn">Add to Cart</button>
                                 </div>
                             );
                         })
@@ -148,3 +145,4 @@ export default function Products({ cart, setCart, products, setProducts, clicked
         </div >
     )
 }
+

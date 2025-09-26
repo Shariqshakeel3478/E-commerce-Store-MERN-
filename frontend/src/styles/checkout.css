@@ -70,11 +70,26 @@
 }
 
 .place-order-btn {
-  background: #28a745;
-  color: white;
+ background: #1c4e6f;
+  color: #fff;
+  transition: 0.5s;
 }
 
 .back-home-btn {
-  background: #007bff;
-  color: white;
+  color: #1c4e6f;
+  background: #fff;
+  border:1px solid #1c4e6f;
+  font-weight: 600;
+  transition: 0.5s;
+}
+
+.place-order-btn:hover{
+   color: #1c4e6f;
+  background: #fff;
+  border: 1px solid #1c4e6f;
+}
+
+.back-home-btn:hover{
+  background: #1c4e6f;
+  color: #fff;
 }

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import '../styles/checkout.css';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useCart } from './CartContext'
+import Swal from 'sweetalert2';
 
-export default function Checkout({ cart, setCart }) {
+export default function Checkout() {
     const navigate = useNavigate();
     const [paymentOption, setPaymentoption] = useState('')
     const [formData, setFormData] = useState({
@@ -14,7 +17,12 @@ export default function Checkout({ cart, setCart }) {
         paymentMethod: 'cod'
     });
 
+
+
+
+    const { cart, setCart } = useCart();
     const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    const [moreInfo, setMoreInfo] = useState(false)
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,19 +34,79 @@ export default function Checkout({ cart, setCart }) {
 
 
         if (!fullName || !email || !address || !city || !postalCode) {
-            alert("Please fill all billing details before placing the order.");
+            Swal.fire({
+                title: "Fill your information please",
+                icon: "error",
+                timer: 1000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                toast: true,
+                position: "top-end",
+                showClass: {
+                    popup: 'swal2-show'
+                },
+                hideClass: {
+                    popup: 'swal2-hide'
+                }
+            });
             return;
         }
 
         if (formData.paymentMethod === '') {
             alert('Please select an option');
         } else if (formData.paymentMethod === 'cod') {
-            alert('Cash on Delivery');
+            Swal.fire({
+                title: "🎉 Order Placed!",
+                text: "Thank you for your purchase. Your order is on the way!",
+                icon: "success",
+                timer: 2500,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                background: "#f0f9ff",
+                color: "#0f5132",
+                position: "center",
+                showClass: {
+                    popup: "animate__animated animate__fadeInDown"
+                },
+                hideClass: {
+                    popup: "animate__animated animate__fadeOutUp"
+                }
+            });
         } else if (formData.paymentMethod === 'credit') {
-            alert('Payment through Card');
+
         }
 
     };
+
+
+    const updateQuantity = async (item, newQty) => {
+        if (newQty < 1) return;
+
+
+        try {
+            await axios.put("http://localhost:5000/cart/update", {
+                productId: item.product_id,
+                quantity: newQty
+            }, { withCredentials: true });
+
+
+            setCart(prevCart =>
+                prevCart.map(p =>
+                    p.product_id === item.product_id
+                        ? { ...p, quantity: newQty }
+                        : p
+                )
+            );
+        } catch (err) {
+            console.log("Error updating quantity", err);
+        }
+    };
+
+
+
+
+
+
 
     return (
         <div className="checkout-container">
@@ -60,19 +128,70 @@ export default function Checkout({ cart, setCart }) {
                         <input type="text" name="address" required placeholder="Address" value={formData.address} onChange={handleChange} />
                         <input type="text" name="city" required placeholder="City" value={formData.city} onChange={handleChange} />
                         <input type="text" name="postalCode" required placeholder="Postal Code" value={formData.postalCode} onChange={handleChange} />
+                        {formData.paymentMethod === 'credit' && (
+                            <div className="credit-card-fields">
+                                <input
+                                    type="text"
+                                    name="cardNumber"
+                                    placeholder="Card Number"
+                                    value={formData.cardNumber || ""}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    name="expiryDate"
+                                    placeholder="Expiry Date (MM/YY)"
+                                    value={formData.expiryDate || ""}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    name="cvv"
+                                    placeholder="CVV"
+                                    value={formData.cvv || ""}
+                                    onChange={handleChange}
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    name="cardHolder"
+                                    placeholder="Card Holder Name"
+                                    value={formData.cardHolder || ""}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        )}
+
 
                         <h2>Payment Method</h2>
                         <div className="payment-options">
                             <label>
-                                <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === 'cod'} onChange={handleChange} />
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="cod"
+                                    checked={formData.paymentMethod === 'cod'}
+                                    onChange={handleChange}
+                                />
                                 Cash on Delivery
                             </label>
                             <label>
-                                <input type="radio" name="paymentMethod" value="credit" checked={formData.paymentMethod === 'credit'} onChange={handleChange} />
+                                <input
+                                    type="radio"
+                                    name="paymentMethod"
+                                    value="credit"
+                                    checked={formData.paymentMethod === 'credit'}
+                                    onChange={handleChange}
+                                />
                                 Credit Card
                             </label>
-
                         </div>
+
+
+
                     </div>
 
 
@@ -80,21 +199,13 @@ export default function Checkout({ cart, setCart }) {
                         <h2>Order Summary</h2>
                         {cart.map((item, index) => (
                             <div className="checkout-item" key={index}>
-                                <img src={item.image} alt={item.name} />
+                                <img src={item.image_url} alt={item.name} />
                                 <div className="item-details">
                                     <h3>{item.name}</h3>
                                     <div className="quantity-controls">
                                         <button
                                             className="qty-btn"
-                                            onClick={() => {
-                                                setCart(prevCart =>
-                                                    prevCart.map(p =>
-                                                        p.name === item.name
-                                                            ? { ...p, quantity: p.quantity > 1 ? p.quantity - 1 : 1 }
-                                                            : p
-                                                    )
-                                                );
-                                            }}
+                                            onClick={() => updateQuantity(item, item.quantity - 1)}
                                         >
                                             −
                                         </button>
@@ -103,15 +214,7 @@ export default function Checkout({ cart, setCart }) {
 
                                         <button
                                             className="qty-btn"
-                                            onClick={() => {
-                                                setCart(prevCart =>
-                                                    prevCart.map(p =>
-                                                        p.name === item.name
-                                                            ? { ...p, quantity: p.quantity + 1 }
-                                                            : p
-                                                    )
-                                                );
-                                            }}
+                                            onClick={() => updateQuantity(item, item.quantity + 1)}
                                         >
                                             +
                                         </button>

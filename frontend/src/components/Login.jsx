@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/login.css';
 import { Link, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2'
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -17,16 +18,14 @@ export default function Login() {
             const res = await fetch("http://localhost:5000/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password }),
+                credentials: "include"
             });
 
             const data = await res.json();
             if (res.ok) {
-                alert("Login successful");
-                console.log("Login Response:", data);
+                Swal.fire('Login Successful', 'Welcome', 'success');
 
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("user", JSON.stringify(data.user));
                 navigate("/");
             } else {
                 alert(data.error || "Login unsuccessful");

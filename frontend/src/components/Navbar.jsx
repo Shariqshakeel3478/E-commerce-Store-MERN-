@@ -1,21 +1,57 @@
 import '../styles/navbar.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import Swal from 'sweetalert2'
+import { useCart } from './CartContext'
 
-export default function Navbar({ onOpenSidebar, products, setCart }) {
+export default function Navbar({ onOpenSidebar, products }) {
 
 
     const [searchterm, setSearchTerm] = useState('')
     const [searchItems, setSearchItems] = useState([])
     const [showResults, setShowResults] = useState(false);
-    console.log("products :", searchItems)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [totalItems, setTotalItems] = useState(3);
 
-    const token = localStorage.getItem('token')
+    const { cart, setCart } = useCart();
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/check-auth", {
+                    credentials: "include"
+                });
+                const data = await res.json();
+                setIsAuthenticated(data.loggedIn);
+            } catch (err) {
+                console.error("Auth check error:", err);
+            }
+        };
+        checkAuth();
+    }, []);
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setCart([])
-    }
+
+    const logout = async () => {
+        try {
+            const res = await fetch("http://localhost:5000/logout", {
+                method: "POST",
+                credentials: "include",
+            });
+            const data = await res.json();
+
+            setIsAuthenticated(false);
+            Swal.fire({
+                title: "Loged out",
+                icon: "success",
+                timer: 1000,
+                showConfirmButton: false,
+                toast: true,
+                position: "top-end",
+            });
+        } catch (err) {
+            console.error("Logout error:", err);
+        }
+    };
+
 
 
     const changeSearch = (e) => {
@@ -73,26 +109,27 @@ export default function Navbar({ onOpenSidebar, products, setCart }) {
                 {/* Right: Buttons */}
                 <div className='nav-right'>
                     <div className='nav-btns'>
-                        {!token ? (
-                            <button>
-                                <i className="fa-solid fa-circle-user"></i>
-                                <Link style={{ color: "white", textDecoration: "none" }} to="/login">Login</Link>
-                            </button>
+                        {!isAuthenticated ? (
+                            <Link style={{ color: "white", textDecoration: "none" }} to="/login"><button>
+                                <i className="fa-solid fa-circle-user"></i>Login
+                            </button></Link>
+
                         ) : (
                             <button onClick={logout}>
                                 <i className="fa-solid fa-circle-user"></i>
                                 Logout
                             </button>
                         )}
-                        <button onClick={onOpenSidebar}>
-                            <i className="fa-solid fa-bag-shopping"></i> View Cart
-                        </button>
+                        <div className="cart-container" onClick={onOpenSidebar}>
+                            <div className="cart-icon">🛒</div>
+                            {totalItems > 0 && <div className="cart-count">{cart.length}</div>}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
-            {/* Bottom menu (full width) */}
-            <div className="nav-bottom">
+
+            <div div className="nav-bottom" >
                 <ul>
                     <li>Home</li>
                     <li>About</li>
@@ -100,8 +137,9 @@ export default function Navbar({ onOpenSidebar, products, setCart }) {
                     <li>Products</li>
                 </ul>
             </div>
-
-
         </>
+
+
+
     )
 }

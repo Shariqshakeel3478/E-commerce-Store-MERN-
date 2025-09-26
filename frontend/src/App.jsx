@@ -4,51 +4,75 @@ import Slider from './components/Slider'
 import Products from './components/Products'
 import Sidebar from './components/Sidebar'
 import Checkout from './components/Checkout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Footer from './components/Footer'
 import Login from './components/Login'
 import Signup from './components/Signup'
 import About from './components/About'
+import axios from 'axios'
+import { CartProvider } from './components/CartContext'
+import { AuthProvider } from './components/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import PublicOnlyRoute from './components/PublicOnlyRoute'
+
 
 
 
 function App() {
 
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [cart, setCart] = useState([]);
   const [products, setProducts] = useState([])
   const [clicked, setClicked] = useState(false)
 
-  const removeFromCart = (productName) => {
-    setCart(prevCart => prevCart.filter(item => item.name !== productName));
-  };
+
+
+
+
+
+
+
+
 
   return (
     <>
-      <Router>
+      <AuthProvider>
 
-        <Routes>
-          <Route path='/' element={
-            <>
-              <Navbar setCart={setCart} products={products} onOpenSidebar={() => setIsSidebarOpen(true)} />
-              <Slider />
-              <About />
-              <Products clicked={clicked} setClicked={setClicked} products={products} setProducts={setProducts} cart={cart} setCart={setCart} />
-              <Sidebar clicked={clicked} setClicked={setClicked} removeFromCart={removeFromCart} cart={cart} setCart={setCart} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-              <Footer />
+        <CartProvider>
 
-            </>
-          }>
+          <Router>
 
-          </Route>
+            <Routes>
+              <Route path='/' element={
+                <>
+                  <Navbar products={products} onOpenSidebar={() => setIsSidebarOpen(true)} />
+                  <Slider />
+                  <About />
+                  <Products clicked={clicked} setClicked={setClicked} products={products} setProducts={setProducts} />
+                  <Sidebar clicked={clicked} setClicked={setClicked} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                  <Footer />
 
-          <Route path='/checkout' element={<Checkout cart={cart} setCart={setCart} />}></Route>
-          <Route path='/Login' element={<Login />}></Route>
-          <Route path='/signup' element={<Signup />}></Route>
+                </>
+              }>
 
-        </Routes>
-      </Router>
+              </Route>
+
+              <Route path='/checkout' element={<Checkout />}></Route>
+
+              <Route path='/Login' element={
+                <PublicOnlyRoute>
+                  <Login />
+                </PublicOnlyRoute>
+              }></Route>
+              <Route path='/signup' element={<PublicOnlyRoute>
+                <Signup />
+              </PublicOnlyRoute>}></Route>
+
+            </Routes>
+          </Router>
+        </CartProvider>
+      </AuthProvider>
     </>
   )
 }
