@@ -5,19 +5,14 @@ import Categorytab from './Categorytab'
 import Swal from 'sweetalert2';
 import { useCart } from './CartContext';
 
-
-
 export default function Products({ products, setProducts }) {
-
     const [loading, setLoading] = useState(true);
-    const [selectedCategory, setSelectedCategory] = useState("all")
-
+    const [selectedCategory, setSelectedCategory] = useState("all");
     const [message, setMessage] = useState("");
     const { cart, setCart } = useCart();
 
     const addToCart = async (product) => {
         try {
-
             const authRes = await fetch("http://localhost:5000/check-auth", {
                 method: "GET",
                 credentials: "include"
@@ -38,6 +33,9 @@ export default function Products({ products, setProducts }) {
                 return;
             }
 
+            // Agar cart me already hai to dobara add na ho
+            const alreadyInCart = cart.some((item) => item.product_id === product.id);
+            if (alreadyInCart) return;
 
             const res = await fetch("http://localhost:5000/cart/add", {
                 method: "POST",
@@ -58,22 +56,10 @@ export default function Products({ products, setProducts }) {
                     position: "top-end",
                 });
 
-                setCart((prevCart) => {
-
-                    const existingItem = prevCart.find((item) => item.product_id === product.id);
-                    if (existingItem) {
-                        return prevCart.map((item) =>
-                            item.product_id === product.id
-                                ? { ...item, quantity: item.quantity + 1 }
-                                : item
-                        );
-                    } else {
-                        return [...prevCart, { ...product, product_id: product.id, quantity: 1 }];
-                    }
-                });
-
-
-
+                setCart((prevCart) => [
+                    ...prevCart,
+                    { ...product, product_id: product.id, quantity: 1 }
+                ]);
             } else {
                 setMessage(data.message || "Failed to add item");
             }
@@ -83,66 +69,54 @@ export default function Products({ products, setProducts }) {
         }
     };
 
-
-
-
-
-
-
     useEffect(() => {
-
         axios.get("http://localhost:5000/products")
             .then((response) => {
-                setProducts(response.data)
-                setLoading(false)
-
+                setProducts(response.data);
+                setLoading(false);
             })
-            .catch((error) => {
-                setLoading(false)
-            })
-    }, [])
+            .catch(() => {
+                setLoading(false);
+            });
+    }, []);
 
     if (loading) return <p>Loading products...</p>;
 
-
     return (
-
-
         <div className='products'>
             <div className='product-filter'>
                 <Categorytab
-                    categories={["all", "mobile", "tablet", "earbuds", 'laptop']}
+                    categories={["all", "mobile", "tablet", "earbuds", "laptop"]}
                     onSelect={(category) => setSelectedCategory(category)}
                 />
             </div>
 
             <div className='product-cards'>
+                {products.map((product) => {
+                    // yahan check karo ke cart me already hai ya nahi
+                    const isAdded = cart.some((item) => item.product_id === product.id);
 
-                {
-                    products
-                        .map((product) => {
+                    return (
+                        <div className="card" key={product.id}>
+                            <img
+                                src={product.image_url}
+                                alt="Product"
+                                className="card-img"
+                            />
+                            <h3 className="card-title">{product.name}</h3>
+                            <p className="card-price">{product.price}$</p>
 
-                            return (
-                                <div className="card" key={product.id}>
-                                    <img
-                                        src={product.image_url}
-                                        alt="Product"
-                                        className="card-img"
-                                    />
-                                    <h3 className="card-title">{product.name}</h3>
-                                    <p className="card-price">{product.price}$</p>
-
-                                    <button onClick={() => { addToCart(product) }} className="card-btn">Add to Cart</button>
-                                </div>
-                            );
-                        })
-
-                }
-
-
-
+                            <button
+                                onClick={() => addToCart(product)}
+                                className={`card-btn ${isAdded ? "added" : ""}`}
+                                disabled={isAdded}
+                            >
+                                {isAdded ? "✔ Added" : "Add to Cart"}
+                            </button>
+                        </div>
+                    );
+                })}
             </div>
-        </div >
-    )
+        </div>
+    );
 }
-

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { useCart } from './CartContext'
 
-export default function Navbar({ onOpenSidebar, products }) {
+export default function Navbar({ onOpenSidebar, products, onlogout }) {
 
 
     const [searchterm, setSearchTerm] = useState('')
@@ -14,21 +14,6 @@ export default function Navbar({ onOpenSidebar, products }) {
     const [totalItems, setTotalItems] = useState(3);
 
     const { cart, setCart } = useCart();
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const res = await fetch("http://localhost:5000/check-auth", {
-                    credentials: "include"
-                });
-                const data = await res.json();
-                setIsAuthenticated(data.loggedIn);
-            } catch (err) {
-                console.error("Auth check error:", err);
-            }
-        };
-        checkAuth();
-    }, []);
-
 
     const logout = async () => {
         try {
@@ -51,6 +36,30 @@ export default function Navbar({ onOpenSidebar, products }) {
             console.error("Logout error:", err);
         }
     };
+
+
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const res = await fetch("http://localhost:5000/check-auth", {
+                    credentials: "include"
+                });
+                const data = await res.json();
+                setIsAuthenticated(data.loggedIn);
+            } catch (err) {
+                console.error("Auth check error:", err);
+            }
+        };
+        checkAuth();
+    }, []);
+
+
+
+
+
+
+
 
 
 
@@ -115,21 +124,21 @@ export default function Navbar({ onOpenSidebar, products }) {
                             </button></Link>
 
                         ) : (
-                            <button onClick={logout}>
+                            <button className='logout-btn' onClick={logout}>
                                 <i className="fa-solid fa-circle-user"></i>
                                 Logout
                             </button>
                         )}
-                        <div className="cart-container" onClick={onOpenSidebar}>
-                            <div className="cart-icon">🛒</div>
+                        <button className="cart-container" onClick={onOpenSidebar}>
+                            <div className="cart-icon"><i className="fa-solid fa-bag-shopping"></i></div>
                             {totalItems > 0 && <div className="cart-count">{cart.length}</div>}
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div >
 
 
-            <div div className="nav-bottom" >
+            <div className="nav-bottom" >
                 <ul>
                     <li>Home</li>
                     <li>About</li>

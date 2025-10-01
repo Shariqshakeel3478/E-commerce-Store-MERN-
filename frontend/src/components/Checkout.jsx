@@ -4,8 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useCart } from './CartContext'
 import Swal from 'sweetalert2';
+import { useOrder } from "../context/OrderContext";
+
 
 export default function Checkout() {
+    const { orderData, setOrderData } = useOrder();
+
     const navigate = useNavigate();
     const [paymentOption, setPaymentoption] = useState('')
     const [formData, setFormData] = useState({
@@ -19,10 +23,10 @@ export default function Checkout() {
 
 
 
-
     const { cart, setCart } = useCart();
+
     const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-    const [moreInfo, setMoreInfo] = useState(false)
+
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -55,24 +59,88 @@ export default function Checkout() {
         if (formData.paymentMethod === '') {
             alert('Please select an option');
         } else if (formData.paymentMethod === 'cod') {
-            Swal.fire({
-                title: "🎉 Order Placed!",
-                text: "Thank you for your purchase. Your order is on the way!",
-                icon: "success",
-                timer: 2500,
-                timerProgressBar: true,
-                showConfirmButton: false,
-                background: "#f0f9ff",
-                color: "#0f5132",
-                position: "center",
-                showClass: {
-                    popup: "animate__animated animate__fadeInDown"
-                },
-                hideClass: {
-                    popup: "animate__animated animate__fadeOutUp"
-                }
-            });
+            axios.post("http://localhost:5000/orders", {
+                user: formData,
+                paymentMethod: "cod",
+                total: totalPrice
+            })
+                .then(res => {
+                    setOrderData({
+                        user: formData,
+                        paymentMethod: "cod",
+                        total: totalPrice,
+                        items: cart
+                    });
+
+                    Swal.fire({
+                        title: "🎉 Order Placed!",
+                        text: "Thank you for your purchase. Your order is on the way!",
+                        icon: "success",
+                        timer: 2500,
+                        showConfirmButton: false,
+                    });
+                    setCart([]);
+                    navigate("/");
+                })
+                .catch(err => {
+                    console.error("Error saving order:", err);
+                    Swal.fire("Error", "Failed to save order", "error");
+                });
         } else if (formData.paymentMethod === 'credit') {
+
+            axios.get("http://localhost:5000/get-token")
+                .then(res => {
+                    const orderObj = {
+                        user: formData,
+                        paymentMethod: "credit",
+                        total: totalPrice,
+                        items: cart
+                    };
+
+                    setOrderData(orderObj);
+                    localStorage.setItem("orderData", JSON.stringify(orderObj));
+
+                    const token = res.data.token;
+
+                    const payload = {
+                        MERCHANT_ID: "102",
+                        MERCHANT_NAME: "Shariq",
+                        TOKEN: token,
+                        TXNAMT: Math.round(totalPrice).toString(),
+                        CUSTOMER_MOBILE_NO: "923001234567",
+                        CUSTOMER_EMAIL_ADDRESS: formData.email,
+                        SUCCESS_URL: "http://localhost:5173/payment-success",
+                        FAILURE_URL: "http://localhost:3000/payment-failure",
+                        BASKET_ID: "order-" + Date.now(),
+                        CURRENCY_CODE: "PKR",
+                        ORDER_DATE: new Date().toISOString().split("T")[0],
+                        CUSTOMER_NAME: formData.fullName
+                    };
+
+                    const form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = "https://ipguat.apps.net.pk/Ecommerce/api/Transaction/PostTransaction";
+
+                    for (let key in payload) {
+                        const input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = key;
+                        input.value = payload[key];
+                        form.appendChild(input);
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
+                })
+                .catch(err => {
+                    console.error("Token fetch error:", err);
+                    Swal.fire({
+                        title: "Payment initialization failed",
+                        icon: "error",
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                });
 
         }
 
@@ -128,42 +196,7 @@ export default function Checkout() {
                         <input type="text" name="address" required placeholder="Address" value={formData.address} onChange={handleChange} />
                         <input type="text" name="city" required placeholder="City" value={formData.city} onChange={handleChange} />
                         <input type="text" name="postalCode" required placeholder="Postal Code" value={formData.postalCode} onChange={handleChange} />
-                        {formData.paymentMethod === 'credit' && (
-                            <div className="credit-card-fields">
-                                <input
-                                    type="text"
-                                    name="cardNumber"
-                                    placeholder="Card Number"
-                                    value={formData.cardNumber || ""}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    name="expiryDate"
-                                    placeholder="Expiry Date (MM/YY)"
-                                    value={formData.expiryDate || ""}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    name="cvv"
-                                    placeholder="CVV"
-                                    value={formData.cvv || ""}
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    name="cardHolder"
-                                    placeholder="Card Holder Name"
-                                    value={formData.cardHolder || ""}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-                        )}
+
 
 
                         <h2>Payment Method</h2>

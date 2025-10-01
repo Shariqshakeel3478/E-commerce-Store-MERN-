@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
 require('dotenv').config()
 const cookieParser = require("cookie-parser")
+const axios = require("axios");
+
 
 
 const app = express();
@@ -38,7 +40,7 @@ app.post('/signup', async (req, res) => {
         email,
         password
     } = req.body;
-    console.log('allmydata', req.body);
+
     if (!username || !email || !password) return res.status(400).json({
         error: "All fields required"
     });
@@ -293,6 +295,153 @@ app.get('/products', async (req, res) => {
 
 
 })
+
+
+
+// Payment Gateway
+
+
+async function getAccessToken() {
+    try {
+        const res = await axios.get(
+            "https://ipguat.apps.net.pk/Ecommerce/api/Transaction/GetAccessToken", {
+                params: {
+                    MERCHANT_ID: "102",
+                    SECURED_KEY: "zWHjBp2AlttNu1sK"
+                }
+            }
+        );
+        console.log(res.data)
+        return res.data.ACCESS_TOKEN;
+
+    } catch (err) {
+        console.error("Error getting token:", err.response.data || err.message);
+        return null;
+    }
+}
+
+
+
+app.get("/get-token", async (req, res) => {
+    try {
+        const token = await getAccessToken();
+        if (!token) {
+            return res.status(500).json({
+                error: "Token generation failed"
+            });
+        }
+        res.json({
+            token
+        });
+    } catch (error) {
+        console.error("Error generating token:", error.message);
+        res.status(500).json({
+            error: "Server error"
+        });
+    }
+});
+
+
+
+// save order summary
+
+// save order summary
+app.post('/orders', (req, res) => {
+    const {
+        user,
+        paymentMethod,
+        total,
+        items
+    } = req.body;
+
+    console.log(req.body);
+
+    if (!user || !paymentMethod || !total || !items) {
+        return res.status(400).json({
+            message: "Missing required fields"
+        });
+    }
+
+    // Start transaction
+    db.beginTransaction((err) => {
+        if (err) {
+            console.error("Transaction Error:", err);
+            return res.status(500).json({
+                message: "Transaction error"
+            });
+        }
+
+        // Insert into orders
+        const orderQuery = `
+            INSERT INTO orders 
+            (user_name, email, address, city, postal_code, payment_method, total_amount)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.query(orderQuery, [
+            user.fullName,
+            user.email,
+            user.address,
+            user.city,
+            user.postalCode,
+            paymentMethod,
+            total
+        ], (err, orderResult) => {
+            if (err) {
+                return db.rollback(() => {
+                    console.error("Order Insert Error:", err);
+                    res.status(500).json({
+                        message: "Error placing order"
+                    });
+                });
+            }
+
+            const orderId = orderResult.insertId;
+
+            // Insert items
+            const itemQuery = `
+                INSERT INTO order_items (order_id, product_id, product_name, quantity, price)
+                VALUES ?
+            `;
+
+            const itemValues = items.map(item => [
+                orderId,
+                item.product_id,
+                item.name,
+                item.quantity,
+                item.price
+            ]);
+
+            db.query(itemQuery, [itemValues], (err) => {
+                if (err) {
+                    return db.rollback(() => {
+                        console.error("Order Items Insert Error:", err);
+                        res.status(500).json({
+                            message: "Error saving order items"
+                        });
+                    });
+                }
+
+                // Commit
+                db.commit((err) => {
+                    if (err) {
+                        return db.rollback(() => {
+                            console.error("Commit Error:", err);
+                            res.status(500).json({
+                                message: "Commit failed"
+                            });
+                        });
+                    }
+
+                    res.json({
+                        success: true,
+                        message: "Order placed successfully"
+                    });
+                });
+            });
+        });
+    });
+});
 
 
 

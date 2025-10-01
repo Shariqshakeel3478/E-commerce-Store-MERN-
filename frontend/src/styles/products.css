@@ -53,6 +53,12 @@
   transition: background 0.2s ease;
 }
 
+.card-btn.added {
+  background-color: #28a745; 
+  color: white;
+  cursor: not-allowed;
+}
+
 .card-btn:hover {
   background-color: #5a4dbc;
 }

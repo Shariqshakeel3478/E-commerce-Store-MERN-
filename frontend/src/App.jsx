@@ -15,6 +15,14 @@ import { CartProvider } from './components/CartContext'
 import { AuthProvider } from './components/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicOnlyRoute from './components/PublicOnlyRoute'
+import { useNavigate } from 'react-router-dom'
+import Swal from 'sweetalert2'
+import { OrderProvider } from "./context/OrderContext";
+import PaymentSuccess from './components/PaymentSuccess'
+import PaymentFailure from './components/PaymentFailure'
+
+
+
 
 
 
@@ -34,43 +42,47 @@ function App() {
 
 
 
-
   return (
     <>
       <AuthProvider>
 
         <CartProvider>
+          <OrderProvider>
 
-          <Router>
 
-            <Routes>
-              <Route path='/' element={
-                <>
-                  <Navbar products={products} onOpenSidebar={() => setIsSidebarOpen(true)} />
-                  <Slider />
-                  <About />
-                  <Products clicked={clicked} setClicked={setClicked} products={products} setProducts={setProducts} />
-                  <Sidebar clicked={clicked} setClicked={setClicked} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                  <Footer />
+            <Router>
 
-                </>
-              }>
+              <Routes>
+                <Route path='/' element={
+                  <>
+                    <Navbar products={products} onOpenSidebar={() => setIsSidebarOpen(true)} />
+                    <Slider />
+                    <About />
+                    <Products clicked={clicked} setClicked={setClicked} products={products} setProducts={setProducts} />
+                    <Sidebar clicked={clicked} setClicked={setClicked} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                    <Footer />
 
-              </Route>
+                  </>
+                }>
 
-              <Route path='/checkout' element={<Checkout />}></Route>
+                </Route>
 
-              <Route path='/Login' element={
-                <PublicOnlyRoute>
-                  <Login />
-                </PublicOnlyRoute>
-              }></Route>
-              <Route path='/signup' element={<PublicOnlyRoute>
-                <Signup />
-              </PublicOnlyRoute>}></Route>
+                <Route path='/checkout' element={<Checkout />}></Route>
+                <Route path='/payment-success' element={<PaymentSuccess />}></Route>
+                <Route path='/payment-failure' element={<PaymentFailure />}></Route>
 
-            </Routes>
-          </Router>
+                <Route path='/Login' element={
+                  <PublicOnlyRoute>
+                    <Login />
+                  </PublicOnlyRoute>
+                }></Route>
+                <Route path='/signup' element={<PublicOnlyRoute>
+                  <Signup />
+                </PublicOnlyRoute>}></Route>
+
+              </Routes>
+            </Router>
+          </OrderProvider>
         </CartProvider>
       </AuthProvider>
     </>

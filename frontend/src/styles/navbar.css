@@ -2,7 +2,7 @@
 .navbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   padding: 12px 20px;
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -154,9 +154,17 @@
   white-space: nowrap;
 }
 
+
+.cart-icon i{
+  color: white;
+}
+
 .nav-btns button:hover {
   background: #5a4dbc;
 }
+
+
+
 
 .hello-user {
   font-size: 0.95rem;
