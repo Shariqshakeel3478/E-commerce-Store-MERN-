@@ -1,0 +1,101 @@
+.table-container {
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin: 20px auto;
+  width: 95%;
+  transition: 0.3s ease;
+}
+
+.table-container:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+}
+
+h1 {
+  text-align: center;
+  color: #1e293b;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  letter-spacing: 0.5px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Inter", sans-serif;
+  font-size: 0.95rem;
+}
+
+thead {
+  background-color: #1e293b;
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+
+th, td {
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+tr:hover {
+  background-color: #f9fafb;
+  transition: 0.2s ease;
+}
+
+td {
+  color: #334155;
+}
+
+/* Dropdown for status */
+.status-badge {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  outline: none;
+  font-size: 0.9rem;
+  transition: 0.3s;
+}
+
+.status-badge.delivered {
+  background-color: #22c55e;
+}
+
+.status-badge.pending {
+  background-color: #facc15;
+  color: #222;
+}
+
+.status-badge.cancelled {
+  background-color: #ef4444;
+}
+
+/* Smooth hover animation */
+.status-badge:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* Payment badge */
+.payment-status {
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 5px 10px;
+  display: inline-block;
+}
+
+.payment-status.paid {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.payment-status.unpaid {
+  background-color: #fee2e2;
+  color: #991b1b;
+}

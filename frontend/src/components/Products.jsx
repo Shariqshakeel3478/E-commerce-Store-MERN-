@@ -10,6 +10,43 @@ export default function Products({ products, setProducts }) {
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [message, setMessage] = useState("");
     const { cart, setCart } = useCart();
+    const [categories, setCategories] = useState([])
+    const [subcategories, setSubCategories] = useState([])
+    const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+
+
+    useEffect(() => {
+        const fetchSubcategories = async () => {
+
+            try {
+                const res = await axios.get('http://localhost:5000/subcategories')
+                setSubCategories(res.data);
+            } catch (error) {
+                console.error('Failed to fetch subcategories', error);
+            }
+        };
+        fetchSubcategories();
+    }, []);
+
+
+    // categories
+    useEffect(() => {
+
+        const getCategories = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/categories')
+
+                setCategories(res.data)
+
+            }
+            catch (err) {
+                console.log('cannot fetch categories')
+            }
+        }
+        getCategories()
+
+    }, [])
+
 
     const addToCart = async (product) => {
         try {
@@ -33,7 +70,7 @@ export default function Products({ products, setProducts }) {
                 return;
             }
 
-            // Agar cart me already hai to dobara add na ho
+
             const alreadyInCart = cart.some((item) => item.product_id === product.id);
             if (alreadyInCart) return;
 
@@ -73,6 +110,7 @@ export default function Products({ products, setProducts }) {
         axios.get("http://localhost:5000/products")
             .then((response) => {
                 setProducts(response.data);
+                console.log(response.data)
                 setLoading(false);
             })
             .catch(() => {
@@ -86,23 +124,69 @@ export default function Products({ products, setProducts }) {
         <div className='products'>
             <div className='product-filter'>
                 <Categorytab
-                    categories={["all", "mobile", "tablet", "earbuds", "laptop"]}
-                    onSelect={(category) => setSelectedCategory(category)}
+                    categories={categories}
+                    subcategories={subcategories}
+                    onCategorySelect={(cat) => {
+                        if (!cat) {
+                            setSelectedCategory("all");
+                        } else {
+                            setSelectedCategory(cat.category_id);
+                        }
+                    }}
+                    onSubcategorySelect={(sub) => {
+                        if (!sub) {
+                            setSelectedSubcategory(null);
+                        } else {
+                            setSelectedSubcategory(sub.subcategory_id);
+                        }
+                    }}
                 />
+
+
             </div>
 
             <div className='product-cards'>
                 {products.map((product) => {
-                    // yahan check karo ke cart me already hai ya nahi
+
+
                     const isAdded = cart.some((item) => item.product_id === product.id);
 
                     return (
                         <div className="card" key={product.id}>
                             <img
-                                src={product.image_url}
-                                alt="Product"
+                                src={
+                                    (() => {
+                                        const img = product.images;
+
+                                        // Agar array ke form me hai (already parsed from backend)
+                                        if (Array.isArray(img)) {
+                                            return `http://localhost:5000${img[0]}`;
+                                        }
+
+                                        // Agar JSON stringified array hai
+                                        if (typeof img === "string" && img.startsWith("[")) {
+                                            try {
+                                                const parsed = JSON.parse(img);
+                                                return `http://localhost:5000${parsed[0]}`;
+                                            } catch (err) {
+                                                console.error("JSON parse failed:", err);
+                                            }
+                                        }
+
+                                        // Agar simple string path hai ("/uploads/products/xyz.jpg")
+                                        if (typeof img === "string") {
+                                            return `http://localhost:5000${img}`;
+                                        }
+
+                                        // Default placeholder
+                                        return "placeholder.jpg";
+                                    })()
+                                }
+                                alt={product.name}
                                 className="card-img"
                             />
+
+
                             <h3 className="card-title">{product.name}</h3>
                             <p className="card-price">{product.price}$</p>
 

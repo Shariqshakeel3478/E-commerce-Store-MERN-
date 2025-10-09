@@ -62,7 +62,8 @@ export default function Checkout() {
             axios.post("http://localhost:5000/orders", {
                 user: formData,
                 paymentMethod: "cod",
-                total: totalPrice
+                total: totalPrice,
+                items: cart
             })
                 .then(res => {
                     setOrderData({

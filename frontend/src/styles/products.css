@@ -19,6 +19,27 @@
   margin-top: 10px;
 }
 
+
+.subtabs {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sub-tab-btn {
+  background-color: #eee;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sub-tab-btn:hover {
+  background-color: #ddd;
+}
+
+
 .card:hover {
   transform: translateY(-5px);
 }

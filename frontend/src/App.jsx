@@ -20,6 +20,9 @@ import Swal from 'sweetalert2'
 import { OrderProvider } from "./context/OrderContext";
 import PaymentSuccess from './components/PaymentSuccess'
 import PaymentFailure from './components/PaymentFailure'
+import Admin from './admin/Admin'
+import AdminProtection from './components/AdminProtection'
+
 
 
 
@@ -33,8 +36,48 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [products, setProducts] = useState([])
   const [clicked, setClicked] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
 
+
+  const logout = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      setIsAuthenticated(false);
+      Swal.fire({
+        title: "Loged out",
+        icon: "success",
+        timer: 1000,
+        showConfirmButton: false,
+        toast: true,
+        position: "top-end",
+      });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
+
+
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/check-auth", {
+          credentials: "include"
+        });
+        const data = await res.json();
+        setIsAuthenticated(data.loggedIn);
+      } catch (err) {
+        console.error("Auth check error:", err);
+      }
+    };
+    checkAuth();
+  }, []);
 
 
 
@@ -55,7 +98,7 @@ function App() {
               <Routes>
                 <Route path='/' element={
                   <>
-                    <Navbar products={products} onOpenSidebar={() => setIsSidebarOpen(true)} />
+                    <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} logout={logout} products={products} onOpenSidebar={() => setIsSidebarOpen(true)} />
                     <Slider />
                     <About />
                     <Products clicked={clicked} setClicked={setClicked} products={products} setProducts={setProducts} />
@@ -70,6 +113,8 @@ function App() {
                 <Route path='/checkout' element={<Checkout />}></Route>
                 <Route path='/payment-success' element={<PaymentSuccess />}></Route>
                 <Route path='/payment-failure' element={<PaymentFailure />}></Route>
+                <Route path='/admin' element={<Admin logout={logout} />}></Route>
+
 
                 <Route path='/Login' element={
                   <PublicOnlyRoute>

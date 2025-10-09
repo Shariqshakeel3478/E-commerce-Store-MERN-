@@ -1,27 +1,62 @@
-import React from 'react'
-import '../styles/category.css'
-import { useState } from 'react';
 
-export default function Categorytab({ categories, onSelect }) {
+import React, { useState } from 'react';
+import '../styles/category.css';
 
-    const [active, setActive] = useState("all");
+export default function Categorytab({
+    categories,
+    subcategories,
+    onCategorySelect,
+    onSubcategorySelect,
+}) {
+    const [activeCategoryId, setActiveCategoryId] = useState("all");
 
-    const handleClick = (category) => {
-        setActive(category);
-        onSelect(category);
+    const handleCategoryClick = (cat) => {
+        setActiveCategoryId(cat.category_id || "all");
+        onCategorySelect(cat);
+        onSubcategorySelect(null);
     };
 
     return (
         <div className="tabs">
-            {categories.map((cat) => (
+            <div className="tab-buttons">
                 <button
-                    key={cat}
-                    className={`tab-btn ${active === cat ? "active" : ""}`}
-                    onClick={() => handleClick(cat)}
+                    className={`tab-btn ${activeCategoryId === "all" ? "active" : ""}`}
+                    onClick={() => {
+                        setActiveCategoryId("all");
+                        onCategorySelect(null);
+                        onSubcategorySelect(null);
+                    }}
                 >
-                    {cat}
+                    All
                 </button>
-            ))}
+
+                {categories.map((cat) => (
+                    <button
+                        key={cat.category_id}
+                        className={`tab-btn ${activeCategoryId === cat.category_id ? "active" : ""}`}
+                        onClick={() => handleCategoryClick(cat)}
+                    >
+                        {cat.category_name}
+                    </button>
+                ))}
+            </div>
+
+            {activeCategoryId !== "all" && (
+                <div className="subtabs">
+                    {subcategories
+                        .filter((sub) => sub.category_id === activeCategoryId)
+                        .map((sub) => (
+                            <button
+                                key={sub.subcategory_id}
+                                className="sub-tab-btn"
+                                onClick={() => onSubcategorySelect(sub)}
+                            >
+                                {sub.subcategory_name}
+                            </button>
+                        ))}
+                </div>
+            )}
         </div>
-    )
+    );
+
 }

@@ -1,0 +1,153 @@
+/* ===== Admin Layout ===== */
+.adminPanel {
+  width: 100%;
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ===== Sidebar ===== */
+.sidebar-wrapper {
+  width: 20%;
+  background: #ffffff;
+  border-right: 1px solid #e0e4ea;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 15px;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+ 
+}
+
+.sidebar-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.profile-icon {
+  font-size: 70px;
+  color: #0077ff;
+  margin-bottom: 10px;
+}
+
+.greeting {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* ===== Menu ===== */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+}
+
+.sidebar-menu li {
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-menu li:hover {
+  background-color: #0077ff;
+  color: white;
+  transform: translateX(5px);
+}
+
+/* ===== Main Content ===== */
+.dashboard-wrapper {
+  width: 80%;
+  background-color: #f9fbfd;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.admin-navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  box-sizing: border-box; 
+  height: 60px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.navbar-left .navbar-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+  letter-spacing: 0.5px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.navbar-icon {
+  font-size: 20px;
+  color: #444;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.navbar-icon:hover {
+  color: #009688;
+  transform: scale(1.1);
+}
+
+.logout-btn {
+  background: #0077ff;
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #009688, #00796b);
+  transform: translateY(-2px);
+}
+
+.dashboard-wrapper > *:not(.admin-navbar) {
+  padding: 30px 40px;
+}
+
+/* Responsive fix */
+@media (max-width: 768px) {
+  .admin-navbar {
+    left: 0;
+    padding: 0 15px;
+  }
+  .navbar-title {
+    font-size: 18px;
+  }
+  .logout-btn {
+    padding: 6px 10px;
+  }
+}

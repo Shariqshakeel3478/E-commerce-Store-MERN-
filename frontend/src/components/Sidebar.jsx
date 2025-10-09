@@ -49,7 +49,39 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 {cart.map((item, index) => (
                     <li className='cart-item' key={index}>
-                        <img src={item.image_url} alt="" />
+                        <img
+                            src={
+                                (() => {
+                                    const img = item.images;
+
+
+                                    if (Array.isArray(img)) {
+                                        return `http://localhost:5000${img[0]}`;
+                                    }
+
+
+                                    if (typeof img === "string" && img.startsWith("[")) {
+                                        try {
+                                            const parsed = JSON.parse(img);
+                                            return `http://localhost:5000${parsed[0]}`;
+                                        } catch (err) {
+                                            console.error("JSON parse failed:", err);
+                                        }
+                                    }
+
+
+                                    if (typeof img === "string") {
+                                        return `http://localhost:5000${img}`;
+                                    }
+
+
+                                    return "placeholder.jpg";
+                                })()
+                            }
+                            alt={item.name}
+                            className="cart-img"
+                        />
+
                         {item.name} x {item.quantity} - ${item.price * item.quantity} <button onClick={() => removeFromCart(item.product_id)}>X</button>
                     </li>
                 ))}

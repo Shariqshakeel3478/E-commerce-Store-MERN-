@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import '../styles/login.css';
 import { Link, useNavigate } from 'react-router-dom';
+
 import Swal from 'sweetalert2'
 
 export default function Login() {
+
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
@@ -23,12 +26,19 @@ export default function Login() {
             });
 
             const data = await res.json();
+            console.log("Login response", data);
             if (res.ok) {
-                Swal.fire('Login Successful', 'Welcome', 'success');
 
-                navigate("/");
+
+                if (data.user.email === "0971shariq@gmail.com") {
+                    Swal.fire(`Hi ${data.user.name}`, 'Welcome', 'success');
+                    navigate("/admin");
+                } else {
+                    Swal.fire(`Welcome ${data.user.name}`, 'Welcome', 'success');
+                    navigate("/");
+                }
             } else {
-                alert(data.error || "Login unsuccessful");
+                Swal.fire('Error', data.error || "Login unsuccessful", 'error');
             }
         } catch (err) {
             console.error("Error:", err);

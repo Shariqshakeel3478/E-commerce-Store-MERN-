@@ -4,55 +4,19 @@ import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import { useCart } from './CartContext'
 
-export default function Navbar({ onOpenSidebar, products, onlogout }) {
+
+
+export default function Navbar({ onOpenSidebar, products, logout, isAuthenticated, setIsAuthenticated }) {
 
 
     const [searchterm, setSearchTerm] = useState('')
     const [searchItems, setSearchItems] = useState([])
     const [showResults, setShowResults] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [totalItems, setTotalItems] = useState(3);
 
+
+
     const { cart, setCart } = useCart();
-
-    const logout = async () => {
-        try {
-            const res = await fetch("http://localhost:5000/logout", {
-                method: "POST",
-                credentials: "include",
-            });
-            const data = await res.json();
-
-            setIsAuthenticated(false);
-            Swal.fire({
-                title: "Loged out",
-                icon: "success",
-                timer: 1000,
-                showConfirmButton: false,
-                toast: true,
-                position: "top-end",
-            });
-        } catch (err) {
-            console.error("Logout error:", err);
-        }
-    };
-
-
-
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const res = await fetch("http://localhost:5000/check-auth", {
-                    credentials: "include"
-                });
-                const data = await res.json();
-                setIsAuthenticated(data.loggedIn);
-            } catch (err) {
-                console.error("Auth check error:", err);
-            }
-        };
-        checkAuth();
-    }, []);
 
 
 
@@ -81,13 +45,14 @@ export default function Navbar({ onOpenSidebar, products, onlogout }) {
 
     return (
         <>
+
             <div className='navbar'>
-                {/* Left: Logo */}
+
                 <div className='nav-left'>
                     <div className='logo'>My Store</div>
                 </div>
 
-                {/* Center: Search */}
+
                 <div className='nav-center'>
                     <div className='search'>
                         <input
@@ -115,7 +80,7 @@ export default function Navbar({ onOpenSidebar, products, onlogout }) {
                     </div>
                 </div>
 
-                {/* Right: Buttons */}
+
                 <div className='nav-right'>
                     <div className='nav-btns'>
                         {!isAuthenticated ? (

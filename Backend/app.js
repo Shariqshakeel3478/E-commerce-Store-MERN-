@@ -6,12 +6,20 @@ const bcrypt = require('bcrypt')
 require('dotenv').config()
 const cookieParser = require("cookie-parser")
 const axios = require("axios");
-
+const multer = require('multer');
+const path = require("path");
+const fs = require('fs')
+if (!fs.existsSync("uploads/products")) {
+    fs.mkdirSync("uploads/products", {
+        recursive: true
+    });
+}
 
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser())
+app.use('/uploads', express.static('uploads'));
 
 
 
@@ -23,6 +31,17 @@ app.use(cors({
 }));
 
 
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/products");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname)); // unique filename
+    },
+});
+const upload = multer({
+    storage
+});
 
 
 const db = sql.createConnection({
@@ -53,10 +72,12 @@ app.post('/signup', async (req, res) => {
         });
     }
 
+    const role = "user"
+
     const hashedPassword = await bcrypt.hash(password, 10);
     db.query(
-        'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-        [username, email, hashedPassword],
+        'INSERT INTO users (name, email, password,role) VALUES (?, ?, ?,?)',
+        [username, email, hashedPassword, role],
         (err, result) => {
             if (err) {
                 console.error("DB Error Details:", err);
@@ -241,15 +262,17 @@ app.delete("/cart/remove/:productId", authenticate, (req, res) => {
 
 
 app.get("/cart", authenticate, (req, res) => {
-
     const userId = req.user.id;
     const query = `
-    SELECT cart.id AS cart_id, cart.quantity,
-    products.id AS product_id, products.name, products.price, products.image_url, products.category
-    FROM cart
-    JOIN products ON cart.product_id = products.id
-    WHERE cart.user_id = ?;
+        SELECT cart.id AS cart_id, cart.quantity,
+        products.id AS product_id, products.name, products.price,
+        JSON_UNQUOTE(JSON_EXTRACT(products.images, '$[0]')) AS image,
+        products.category_id
+        FROM cart
+        JOIN products ON cart.product_id = products.id
+        WHERE cart.user_id = ?;
     `;
+
     db.query(query, [userId], (err, results) => {
         if (err) return res.status(500).json({
             error: "DB Error"
@@ -258,10 +281,8 @@ app.get("/cart", authenticate, (req, res) => {
         res.json(results);
         console.log("Cart API userId:", userId);
         console.log("Cart Results:", results);
-
     });
 });
-
 
 
 app.post("/logout", authenticate, (req, res) => {
@@ -343,9 +364,7 @@ app.get("/get-token", async (req, res) => {
 
 
 
-// save order summary
 
-// save order summary
 app.post('/orders', (req, res) => {
     const {
         user,
@@ -442,6 +461,279 @@ app.post('/orders', (req, res) => {
         });
     });
 });
+
+
+
+
+
+
+
+// admin panel work
+
+
+
+app.post('/addproduct', upload.array("images", 5), (req, res) => {
+    try {
+        const {
+            productName,
+            category,
+            subcategory,
+            price,
+            description,
+            quantity
+        } = req.body;
+
+        if (!productName || !category || !subcategory || !price || !description || !quantity) {
+            return res.status(400).json({
+                error: 'Please fill all required fields'
+            });
+        }
+
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({
+                error: 'Please upload at least one image'
+            });
+        }
+
+        const imagePaths = req.files.map(file => `/uploads/products/${file.filename}`);
+
+        const sql = `
+      INSERT INTO products 
+      (name, price, subcategory_id, description, quantity, images,category_id) 
+      VALUES (?, ?, ?, ?, ?, ?,?)
+    `;
+
+        const values = [
+            productName,
+            price,
+            subcategory,
+            description,
+            quantity,
+            JSON.stringify(imagePaths),
+            category
+        ];
+
+        db.query(sql, values, (err, result) => {
+            if (err) {
+                console.error("Database error:", err);
+                return res.status(500).json({
+                    error: "Database insert failed"
+                });
+            }
+            res.status(200).json({
+                message: "Product added successfully",
+                productId: result.insertId,
+            });
+        });
+    } catch (error) {
+        console.error("Unexpected error:", error);
+        res.status(500).json({
+            error: 'Something went wrong'
+        });
+    }
+});
+
+
+
+
+
+// order details api
+
+
+
+app.get('/ordersplaced', (req, res) => {
+    db.query('SELECT * FROM orders', (err, result) => {
+        if (err) {
+            return res.status(400).json({
+                error: "No orders to display"
+            });
+        }
+        res.status(200).json(result);
+    });
+});
+
+
+
+// update orders
+
+app.put('/ordersplaced/:id', (req, res) => {
+    const orderId = req.params.id;
+    const {
+        order_status
+    } = req.body;
+
+    const sql = 'UPDATE orders SET order_status = ? WHERE order_id = ?';
+
+    db.query(sql, [order_status, orderId], (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).send('Error updating order status');
+        }
+        res.send('Order status updated successfully');
+    });
+});
+
+
+// product edit 
+
+// Edit product API
+app.put('/editproduct/:id', upload.array("images", 5), (req, res) => {
+    const {
+        id
+    } = req.params;
+    const {
+        productName,
+        category,
+        subcategory,
+        price,
+        description,
+        quantity
+    } = req.body;
+
+    if (!productName || !category || !subcategory || !price || !description || !quantity) {
+        return res.status(400).json({
+            error: "All fields are required"
+        });
+    }
+
+    // Handle uploaded images
+    let imagePaths = null;
+    if (req.files && req.files.length > 0) {
+        imagePaths = JSON.stringify(
+            req.files.map(file => `/uploads/products/${file.filename}`)
+        );
+    }
+
+    // Build SQL query dynamically
+    let sql = `
+        UPDATE products
+        SET name = ?, price = ?, subcategory_id = ?, description = ?, quantity = ?, category_id = ?
+    `;
+    const values = [productName, price, subcategory, description, quantity, category];
+
+    if (imagePaths) {
+        sql += `, images = ?`;
+        values.push(imagePaths);
+    }
+
+    sql += ` WHERE id = ?`;
+    values.push(id);
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error("Error updating product:", err);
+            return res.status(500).json({
+                message: "Error updating product"
+            });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Product not found"
+            });
+        }
+        res.json({
+            message: "Product updated successfully"
+        });
+    });
+});
+
+
+
+
+//delete api
+
+// Delete product API
+app.delete('/delproduct/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({
+        error: "Invalid product ID"
+    });
+
+    // Step 1: delete product from cart first
+    db.query('DELETE FROM cart WHERE product_id = ?', [id], (err) => {
+        if (err) {
+            console.error("Error deleting from cart:", err);
+            return res.status(500).json({
+                error: "Failed to remove product from cart"
+            });
+        }
+
+        // Step 2: delete from products
+        db.query('DELETE FROM products WHERE id = ?', [id], (err, result) => {
+            if (err) {
+                console.error("Error deleting product:", err);
+                return res.status(500).json({
+                    error: "Failed to delete product"
+                });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    message: "Product not found"
+                });
+            }
+            res.status(200).json({
+                message: "Product deleted successfully"
+            });
+        });
+    });
+});
+
+
+// users display
+
+
+app.get('/users', (req, res) => {
+
+    db.query('SELECT * FROM users', (err, result) => {
+        if (err) {
+            return res.status(400).json({
+                error: 'no data found'
+            })
+
+        }
+        res.status(200).json(result)
+    })
+})
+
+
+
+
+
+
+// Categories
+
+app.get('/categories', (req, res) => {
+
+    db.query('SELECT * FROM categories', (err, result) => {
+        if (err) {
+            return res.status(400).json("categories not fetched")
+        } else {
+            return res.status(200).json(result)
+        }
+    })
+
+})
+
+
+app.get('/subcategories', (req, res) => {
+    const categoryId = req.query.category_id;
+    let query = 'SELECT * FROM sub_categories';
+    let params = [];
+
+    if (categoryId) {
+        query += ' WHERE category_id = ?';
+        params.push(categoryId);
+    }
+
+    db.query(query, params, (err, results) => {
+        if (err) return res.status(500).json({
+            error: 'DB error'
+        });
+        res.json(results);
+    });
+});
+
+
 
 
 
