@@ -1,202 +1,117 @@
-import axios from 'axios'
-import { useState, useEffect } from 'react'
-import '../styles/products.css'
-import Categorytab from './Categorytab'
-import Swal from 'sweetalert2';
-import { useCart } from './CartContext';
+import axios from "axios";
+import { useState, useEffect } from "react";
+import "../styles/products.css";
+import Categorytab from "./Categorytab";
+import Swal from "sweetalert2";
+import { useCart } from "./CartContext";
+import { useNavigate } from "react-router-dom";
 
-export default function Products({ products, setProducts }) {
-    const [loading, setLoading] = useState(true);
+export default function Products({ products, setProducts, categories, subcategories, loading, setLoading }) {
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [message, setMessage] = useState("");
-    const { cart, setCart } = useCart();
-    const [categories, setCategories] = useState([])
-    const [subcategories, setSubCategories] = useState([])
+    const { cart, setCart, addToCart } = useCart();
+
+    const navigate = useNavigate()
     const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
 
-    useEffect(() => {
-        const fetchSubcategories = async () => {
+    const [likedItems, setLikedItems] = useState([]);
 
-            try {
-                const res = await axios.get('http://localhost:5000/subcategories')
-                setSubCategories(res.data);
-            } catch (error) {
-                console.error('Failed to fetch subcategories', error);
-            }
-        };
-        fetchSubcategories();
-    }, []);
+    const productOpen = (product_id) => {
+        navigate(`/products/${product_id}`)
 
+    }
 
-    // categories
-    useEffect(() => {
-
-        const getCategories = async () => {
-            try {
-                const res = await axios.get('http://localhost:5000/categories')
-
-                setCategories(res.data)
-
-            }
-            catch (err) {
-                console.log('cannot fetch categories')
-            }
-        }
-        getCategories()
-
-    }, [])
-
-
-    const addToCart = async (product) => {
-        try {
-            const authRes = await fetch("http://localhost:5000/check-auth", {
-                method: "GET",
-                credentials: "include"
-            });
-
-            const authData = await authRes.json();
-
-            if (!authData.loggedIn) {
-                Swal.fire({
-                    title: 'Please login first',
-                    icon: 'error',
-                    timer: 1500,
-                    timerProgressBar: true,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end',
-                });
-                return;
-            }
-
-
-            const alreadyInCart = cart.some((item) => item.product_id === product.id);
-            if (alreadyInCart) return;
-
-            const res = await fetch("http://localhost:5000/cart/add", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ productId: product.id })
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                Swal.fire({
-                    title: "Item added to cart",
-                    icon: "success",
-                    timer: 1000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: "top-end",
-                });
-
-                setCart((prevCart) => [
-                    ...prevCart,
-                    { ...product, product_id: product.id, quantity: 1 }
-                ]);
-            } else {
-                setMessage(data.message || "Failed to add item");
-            }
-        } catch (error) {
-            console.error("Error:", error);
-            setMessage("Something went wrong");
-        }
+    const toggleLike = (productId) => {
+        setLikedItems((prev) =>
+            prev.includes(productId)
+                ? prev.filter((id) => id !== productId)
+                : [...prev, productId]
+        );
     };
 
-    useEffect(() => {
-        axios.get("http://localhost:5000/products")
-            .then((response) => {
-                setProducts(response.data);
-                console.log(response.data)
-                setLoading(false);
-            })
-            .catch(() => {
-                setLoading(false);
-            });
-    }, []);
+
+
 
     if (loading) return <p>Loading products...</p>;
 
     return (
-        <div className='products'>
-            <div className='product-filter'>
+        <div className="products">
+            <div className="product-filter">
                 <Categorytab
+                    products={products}
                     categories={categories}
                     subcategories={subcategories}
                     onCategorySelect={(cat) => {
-                        if (!cat) {
-                            setSelectedCategory("all");
-                        } else {
-                            setSelectedCategory(cat.category_id);
-                        }
+                        if (!cat) setSelectedCategory("all");
+                        else setSelectedCategory(cat.category_id);
                     }}
                     onSubcategorySelect={(sub) => {
-                        if (!sub) {
-                            setSelectedSubcategory(null);
-                        } else {
-                            setSelectedSubcategory(sub.subcategory_id);
-                        }
+                        if (!sub) setSelectedSubcategory(null);
+                        else setSelectedSubcategory(sub.subcategory_id);
                     }}
                 />
-
-
             </div>
 
-            <div className='product-cards'>
+            <div className="product-cards">
                 {products.map((product) => {
-
-
-                    const isAdded = cart.some((item) => item.product_id === product.id);
+                    const isAdded = cart.some(
+                        (item) => item.product_id === product.product_id
+                    );
+                    const isLiked = likedItems.includes(product.product_id);
 
                     return (
-                        <div className="card" key={product.id}>
+                        <div onClick={() => productOpen(product.product_id)} className="card" data-badge={product.badge} key={product.product_id}>
                             <img
                                 src={
                                     (() => {
                                         const img = product.images;
-
-                                        // Agar array ke form me hai (already parsed from backend)
-                                        if (Array.isArray(img)) {
-                                            return `http://localhost:5000${img[0]}`;
-                                        }
-
-                                        // Agar JSON stringified array hai
-                                        if (typeof img === "string" && img.startsWith("[")) {
-                                            try {
-                                                const parsed = JSON.parse(img);
-                                                return `http://localhost:5000${parsed[0]}`;
-                                            } catch (err) {
-                                                console.error("JSON parse failed:", err);
-                                            }
-                                        }
-
-                                        // Agar simple string path hai ("/uploads/products/xyz.jpg")
-                                        if (typeof img === "string") {
-                                            return `http://localhost:5000${img}`;
-                                        }
-
-                                        // Default placeholder
-                                        return "placeholder.jpg";
+                                        const filtered = img.find((img) => img.is_thumbnail === 1);
+                                        return filtered
+                                            ? `http://localhost:5000${filtered.image_path}`
+                                            : "/default-image.jpg";
                                     })()
                                 }
                                 alt={product.name}
                                 className="card-img"
                             />
+                            <div className="product-des">
+                                <h3 className="card-title">{product.name}</h3>
+                                <div className="product-rating">
+                                    <i className="fa-solid fa-star"></i>
+                                    <i className="fa-solid fa-star"></i>
+                                    <i className="fa-solid fa-star"></i>
+                                    <i className="fa-solid fa-star"></i>
+                                    <i className="fa-solid fa-star-half-stroke"></i>
+                                </div>
+                            </div>
 
+                            <div className="product-bottom">
+                                <p className="card-price">Rs {product.price}</p>
 
-                            <h3 className="card-title">{product.name}</h3>
-                            <p className="card-price">{product.price}$</p>
+                                <div className="product-buttons">
+                                    <button
+                                        className="card-btn"
+                                        onClick={() => toggleLike(product.product_id)}
+                                    >
+                                        {isLiked ? (
+                                            <i className="fa-solid fa-heart liked"></i>
+                                        ) : (
+                                            <i className="fa-regular fa-heart"></i>
+                                        )}
+                                    </button>
 
-                            <button
-                                onClick={() => addToCart(product)}
-                                className={`card-btn ${isAdded ? "added" : ""}`}
-                                disabled={isAdded}
-                            >
-                                {isAdded ? "✔ Added" : "Add to Cart"}
-                            </button>
+                                    <button
+                                        onClick={() => addToCart(product)}
+                                        className={`card-btn ${isAdded ? "added" : ""}`}
+                                        disabled={isAdded}
+                                    >
+                                        {isAdded ? <i className="fa-solid fa-check"></i> : (
+                                            <i className="fa-solid fa-cart-shopping"></i>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     );
                 })}

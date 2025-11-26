@@ -12,10 +12,10 @@ export default function EditModal({ show, onClose, product }) {
         price: '',
         description: '',
         quantity: 1,
-        image: '', // Can be a string (existing image) or a File (new image)
+        images: [],
+        thumbnailIndex: 0,
     });
 
-    // Fetch categories on mount
     useEffect(() => {
         const getCategories = async () => {
             try {
@@ -28,7 +28,7 @@ export default function EditModal({ show, onClose, product }) {
         getCategories();
     }, []);
 
-    // Fetch subcategories when category changes
+
     useEffect(() => {
         const fetchSubcategories = async () => {
             if (!formData.category) {
@@ -37,7 +37,7 @@ export default function EditModal({ show, onClose, product }) {
             }
             try {
                 const res = await axios.get('http://localhost:5000/subcategories', {
-                    params: { category_id: formData.category }
+                    params: { category_id: formData.category },
                 });
                 setSubCategories(res.data);
             } catch (error) {
@@ -47,18 +47,14 @@ export default function EditModal({ show, onClose, product }) {
         fetchSubcategories();
     }, [formData.category]);
 
-    // When product is passed in, populate the form
+
     useEffect(() => {
         if (product) {
-            let parsedImage = '';
-            try {
-                if (product.images) {
-                    parsedImage = product.images.trim().startsWith('[')
-                        ? JSON.parse(product.images)[0]
-                        : product.images;
-                }
-            } catch (e) {
-                console.error('Invalid JSON in product.images', e);
+
+            let displayImage = '';
+            if (Array.isArray(product.images) && product.images.length > 0) {
+                const thumb = product.images.find((img) => img.is_thumbnail === 1);
+                displayImage = thumb ? thumb.image_path : product.images[0].image_path;
             }
 
             setFormData({
@@ -68,52 +64,53 @@ export default function EditModal({ show, onClose, product }) {
                 price: product.price || '',
                 description: product.description || '',
                 quantity: product.quantity || 1,
-                image: parsedImage || '',
+                image: displayImage || '',
             });
         }
     }, [product]);
 
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+
     const handleQuantityChange = (amount) => {
-        setFormData(prev => {
+        setFormData((prev) => {
             const newQuantity = prev.quantity + amount;
             return { ...prev, quantity: newQuantity < 1 ? 1 : newQuantity };
         });
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
             const form = new FormData();
-            form.append("productName", formData.productName);
-            form.append("category", formData.category);
-            form.append("subcategory", formData.subcategory);
-            form.append("price", formData.price);
-            form.append("description", formData.description);
-            form.append("quantity", formData.quantity);
+            form.append('productName', formData.productName);
+            form.append('category', formData.category);
+            form.append('subcategory', formData.subcategory);
+            form.append('price', formData.price);
+            form.append('description', formData.description);
+            form.append('quantity', formData.quantity);
 
-            // Only send a new image if one is selected
-            if (formData.image instanceof File) {
-                form.append("images", formData.image);
+            // Only append if new image selected
+            if (formData.images && formData.images.length > 0) {
+                formData.images.forEach((img) => {
+                    form.append('images', img);
+                });
+                form.append('thumbnailIndex', formData.thumbnailIndex);
             }
 
-            await axios.put(
-                `http://localhost:5000/editproduct/${product.id}`,
-                form,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                }
-            );
+
+            await axios.put(`http://localhost:5000/editproduct/${product.product_id}`, form, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
 
             Swal.fire({
-                title: 'Product updated successfully',
+                title: 'Product updated successfully!',
                 icon: 'success',
                 timer: 1500,
                 showConfirmButton: false,
@@ -124,8 +121,8 @@ export default function EditModal({ show, onClose, product }) {
             onClose();
             window.location.reload();
         } catch (error) {
-            console.error("Error updating product:", error);
-            alert("Failed to update product!");
+            console.error('Error updating product:', error);
+            Swal.fire('Error', 'Failed to update product!', 'error');
         }
     };
 
@@ -195,9 +192,13 @@ export default function EditModal({ show, onClose, product }) {
                         <div>
                             <label>Quantity</label>
                             <div className="quantity-control">
-                                <button type="button" onClick={() => handleQuantityChange(-1)}>-</button>
+                                <button type="button" onClick={() => handleQuantityChange(-1)}>
+                                    -
+                                </button>
                                 <input type="number" value={formData.quantity} readOnly />
-                                <button type="button" onClick={() => handleQuantityChange(1)}>+</button>
+                                <button type="button" onClick={() => handleQuantityChange(1)}>
+                                    +
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -214,28 +215,56 @@ export default function EditModal({ show, onClose, product }) {
                     <label>Upload New Image</label>
                     <input
                         type="file"
-                        name="image"
+                        name="images"
                         accept="image/*"
-                        onChange={(e) =>
-                            setFormData({ ...formData, image: e.target.files[0] })
-                        }
+                        multiple
+                        onChange={(e) => setFormData({ ...formData, images: Array.from(e.target.files) })}
                     />
 
-                    {/* Show current image preview if it's a string URL */}
-                    {typeof formData.image === 'string' && formData.image && (
-                        <div style={{ marginTop: '10px' }}>
-                            <p>Current Image:</p>
-                            <img
-                                src={`http://localhost:5000${formData.image}`}
-                                alt="Current"
-                                style={{ width: '100px', borderRadius: '4px' }}
-                            />
+
+                    {formData.images && formData.images.length > 0 ? (
+                        <div className="image-preview">
+                            {formData.images.map((img, i) => (
+                                <div key={i} style={{ display: 'inline-block', textAlign: 'center', marginRight: '10px' }}>
+                                    <img
+                                        src={URL.createObjectURL(img)}
+                                        alt="preview"
+                                        style={{
+                                            width: '80px',
+                                            height: '80px',
+                                            borderRadius: '8px',
+                                            border: formData.thumbnailIndex === i ? '3px solid green' : '1px solid #ccc',
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => setFormData((prev) => ({ ...prev, thumbnailIndex: i }))}
+                                    />
+                                    <div style={{ fontSize: '12px' }}>
+                                        {formData.thumbnailIndex === i ? 'Thumbnail' : 'Select'}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                    ) : (
+                        <>
+                            <p>Current Images:</p>
+                            {Array.isArray(product.images) &&
+                                product.images.map((img, i) => (
+                                    <img
+                                        key={i}
+                                        src={`http://localhost:5000${img.image_path}`}
+                                        alt="Existing"
+                                        style={{ width: '80px', marginRight: '8px', borderRadius: '8px' }}
+                                    />
+                                ))}
+                        </>
                     )}
+
 
                     <div className="modal-actions" style={{ marginTop: '20px' }}>
                         <button type="submit">Save</button>
-                        <button type="button" onClick={onClose} className="cancel">Cancel</button>
+                        <button type="button" onClick={onClose} className="cancel">
+                            Cancel
+                        </button>
                     </div>
                 </form>
             </div>

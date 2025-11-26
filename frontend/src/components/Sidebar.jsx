@@ -1,94 +1,110 @@
-import React from 'react'
-import '../styles/sidebar.css'
-import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react';
-import axios from 'axios';
-import { useCart } from './CartContext'
+import React, { useEffect, useState } from 'react';
+import '../styles/sidebar.css';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from './CartContext';
 
 export default function Sidebar({ isOpen, onClose }) {
-
     const navigate = useNavigate();
-    const { cart, setCart } = useCart();
+    const { cart, removeFromCart, updateQuantity } = useCart();
 
 
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Close sidebar when clicking outside
     useEffect(() => {
-        axios
-            .get("http://localhost:5000/cart", { withCredentials: true })
-            .then((res) => {
-                console.log("my cart", res.data);
-                setCart(res.data);
-            })
-            .catch((err) => {
-                console.log("Error fetching cart:", err);
-            });
-    }, [])
+        const handleClickOutside = (event) => {
+            if (isOpen && !event.target.closest('.sidebar')) {
+                onClose();
+            }
+        };
 
-    const removeFromCart = async (productId) => {
-        try {
-            await axios.delete(`http://localhost:5000/cart/remove/${productId}`, {
-                withCredentials: true
-            });
-
-
-            setCart(prevCart => prevCart.filter(item => item.product_id !== productId));
-        } catch (err) {
-            console.log("Error removing item:", err);
-        }
-    };
-
-
-
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen, onClose]);
 
     return (
-        <div className='sidebar'
-            style={{ right: isOpen ? "0" : "-350px" }}
-        >
-            <h2>Your Cart</h2>
-            <button onClick={onClose}>Close</button>
-            <ul>
+        <>
+            {isOpen && <div className="sidebar-overlay" onClick={onClose}></div>}
 
-                {cart.map((item, index) => (
-                    <li className='cart-item' key={index}>
-                        <img
-                            src={
-                                (() => {
-                                    const img = item.images;
+            <div className={`sidebar ${isOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
+                    <h2>Your Cart ({cart.length})</h2>
+                    <button className="close-btn" onClick={onClose}>×</button>
+                </div>
 
+                <div className="cart-content">
+                    {cart.length === 0 ? (
+                        <div className="empty-cart">
+                            <p>Your cart is empty.</p>
+                            <button
+                                className="continue-shopping"
+                                onClick={onClose}
+                            >
+                                Continue Shopping
+                            </button>
+                        </div>
+                    ) : (
+                        <ul className="cart-list">
+                            {cart.map((item) => (
+                                <li className="cart-item" key={`${item.product_id}-${item.size || 'default'}`}>
+                                    <img
+                                        src={item.image ? `http://localhost:5000${item.image}` : '/default-image.jpg'}
+                                        alt={item.name}
+                                        className="cart-img"
+                                        onError={(e) => {
+                                            e.target.src = '/default-image.jpg';
+                                        }}
+                                    />
+                                    <div className="cart-info">
+                                        <h4>{item.name}</h4>
+                                        <p>Rs {item.price} × {item.quantity}</p>
+                                        <div className="quantity-controls">
+                                            <button
+                                                onClick={() => updateQuantity(item, item.quantity - 1)}
+                                                className="qty-btn"
+                                            >
+                                                -
+                                            </button>
+                                            <span>{item.quantity}</span>
+                                            <button
+                                                onClick={() => updateQuantity(item, item.quantity + 1)}
+                                                className="qty-btn"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button
+                                        className="remove-btn"
+                                        onClick={() => removeFromCart(item.product_id)}
+                                        aria-label="Remove item"
+                                    >
+                                        ×
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
 
-                                    if (Array.isArray(img)) {
-                                        return `http://localhost:5000${img[0]}`;
-                                    }
-
-
-                                    if (typeof img === "string" && img.startsWith("[")) {
-                                        try {
-                                            const parsed = JSON.parse(img);
-                                            return `http://localhost:5000${parsed[0]}`;
-                                        } catch (err) {
-                                            console.error("JSON parse failed:", err);
-                                        }
-                                    }
-
-
-                                    if (typeof img === "string") {
-                                        return `http://localhost:5000${img}`;
-                                    }
-
-
-                                    return "placeholder.jpg";
-                                })()
-                            }
-                            alt={item.name}
-                            className="cart-img"
-                        />
-
-                        {item.name} x {item.quantity} - ${item.price * item.quantity} <button onClick={() => removeFromCart(item.product_id)}>X</button>
-                    </li>
-                ))}
-
-                {cart.length === 0 ? <p>Add your favourite products</p> : <button onClick={() => navigate('/checkout')} className='checkout-btn'>Checkout</button>}
-            </ul>
-
-        </div>
-    )
+                {cart.length > 0 && (
+                    <div className="cart-footer">
+                        <div className="total-section">
+                            <h3>Total: Rs {total.toFixed(2)}</h3>
+                            <p className="shipping-note">Free shipping on orders over $50</p>
+                        </div>
+                        <button
+                            className="checkout-btn"
+                            onClick={() => {
+                                onClose();
+                                navigate('/checkout');
+                            }}
+                        >
+                            Proceed to Checkout
+                        </button>
+                    </div>
+                )}
+            </div>
+        </>
+    );
 }

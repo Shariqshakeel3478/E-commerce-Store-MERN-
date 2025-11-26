@@ -1,0 +1,139 @@
+.testimonials-section {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 100px 8%;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 60px;
+  color: #111827;
+  position: relative;
+  letter-spacing: 0.5px;
+}
+
+.section-title::after {
+  content: "";
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #e94560, #de8f9c);
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  justify-items: center;
+}
+
+.testimonial-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  padding: 35px 25px;
+  max-width: 340px;
+  transition: all 0.35s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Image Styling */
+.testimonial-image {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.testimonial-image::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e94560, #de8f9c);
+  z-index: 0;
+}
+
+.testimonial-image img {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.25);
+  transition: transform 0.3s ease;
+}
+
+/* Rating Stars */
+.stars {
+  color: #e94560;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.testimonial-text {
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 18px;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.testimonial-name {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+  font-size: 1.05rem;
+}
+
+.testimonial-role {
+  color: #e94560;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0px); }
+}
+
+.testimonial-card:hover img {
+  animation: float 2.5s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 950px) {
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .testimonial-card {
+    max-width: 100%;
+    padding: 25px 20px;
+  }
+
+  .testimonial-image img {
+    width: 65px;
+    height: 65px;
+  }
+}

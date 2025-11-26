@@ -1,0 +1,162 @@
+/* WRAPPER */
+.cat-wrap {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+  background: #f9fafb;
+  min-height: 75vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* ============ LEFT PANEL ============ */
+.cat-panel {
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  border-radius: 0px; /* sharp borders */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Search Box */
+.cat-search input {
+  width: 90%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.cat-search input:focus {
+  border-color: #2563eb;
+}
+
+/* Category List */
+.cat-list {
+  list-style: none;
+  margin-top: 20px;
+  padding: 0;
+}
+
+.cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.cat-item:hover {
+  background: #f3f4f6;
+  padding-left: 18px;
+}
+
+.cat-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cat-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cat-chev {
+  font-size: 1.3rem;
+  color: #6b7280;
+}
+
+/* ============ RIGHT PANEL (SUBCATEGORY) ============ */
+.sub-panel {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0px;
+  padding: 24px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.sub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.sub-header h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.show-all-btn {
+  padding: 8px 14px;
+  background: #111827;
+  color: white;
+  border: none;
+  border-radius: 0px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.show-all-btn:hover {
+  background: #374151;
+}
+
+/* Subcategory List */
+.sub-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+/* Subcategory Item Button */
+.sub-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  border-radius: 0px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #111827;
+  transition: all 0.25s ease;
+}
+
+.sub-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.sub-name {
+  font-size: 0.95rem;
+}
+
+/* Message when no subcategory */
+.no-sub {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .cat-wrap {
+    flex-direction: column;
+  }
+  .cat-panel {
+    width: 100%;
+  }
+}

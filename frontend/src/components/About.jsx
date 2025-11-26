@@ -1,28 +1,49 @@
-import React from 'react'
-import '../styles/about.css'
+import React from "react";
+import "../styles/about.css";
 
 export default function About() {
     return (
-        <section className="about-us">
-            <div className="about-left">
+        <section className="about">
+            <div className="about-container">
 
-                <img
-                    src="https://uztech.pk/wp-content/uploads/2023/06/about-open-parcel.png"
-                    alt="Team Illustration"
-                    className="about-image"
-                />
-            </div>
+                {/* LEFT TEXT SECTION */}
+                <div className="about-text">
+                    <h2 className="about-heading">Who We Are</h2>
+                    <p className="about-description">
+                        At <strong>ShopEase</strong>, we make online shopping simple,
+                        enjoyable, and reliable. Our mission is to deliver premium quality
+                        products with a seamless shopping experience and outstanding support.
+                    </p>
 
-            <div className="about-right">
-                <h2>ABOUT US</h2>
-                <p>
-                    We’re a passionate team of creators, thinkers, and doers working together to bring ideas to life.
-                    From concept to execution, we aim to deliver impactful solutions that make a difference.
-                    Innovation drives us, and collaboration defines us.
-                </p>
-                <button className="learn-more-btn">Learn More</button>
+                    <div className="about-stats">
+                        <div className="stat">
+                            <h3>500+</h3>
+                            <p>Products</p>
+                        </div>
+
+                        <div className="stat">
+                            <h3>10k+</h3>
+                            <p>Happy Customers</p>
+                        </div>
+
+                        <div className="stat">
+                            <h3>5+</h3>
+                            <p>Years of Trust</p>
+                        </div>
+                    </div>
+
+                    <button className="about-btn">Learn More</button>
+                </div>
+
+                {/* RIGHT IMAGE SECTION */}
+                <div className="about-image">
+                    <img
+                        src="https://images.pexels.com/photos/699122/pexels-photo-699122.jpeg"
+                        alt="About our store"
+                    />
+                </div>
+
             </div>
         </section>
-
-    )
+    );
 }

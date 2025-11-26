@@ -5,6 +5,7 @@ import ProductDisplay from './components/ProductDisplay';
 import UserDisplay from './components/UserDisplay';
 import { FaBell, FaSignOutAlt, FaUserCircle } from "react-icons/fa";
 import OrderDisplay from './components/OrderDisplay';
+import CategoryDisplay from './components/CategoryDisplay'
 import axios from 'axios';
 
 
@@ -12,6 +13,47 @@ export default function Admin({ logout }) {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [orders, setOrders] = useState([])
     const [users, setUsers] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [formData, setFormData] = useState({
+        productName: '',
+        category: '',
+        subcategory: '',
+        price: '',
+        description: '',
+        quantity: 1
+    });
+
+    useEffect(() => {
+        const getCategories = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/categories');
+                setCategories(res.data);
+
+            } catch (err) {
+                console.error('Cannot fetch categories:', err);
+            }
+        };
+        getCategories();
+    }, []);
+
+    useEffect(() => {
+        const fetchSubcategories = async () => {
+
+            try {
+                const res = await axios.get('http://localhost:5000/subcategories', {
+                    params: { category_id: formData.category }
+                });
+                setSubCategories(res.data);
+
+            } catch (error) {
+                console.error('Failed to fetch subcategories:', error);
+            }
+        };
+        fetchSubcategories();
+    }, [formData.category]);
+
+
 
     useEffect(() => {
 
@@ -52,7 +94,7 @@ export default function Admin({ logout }) {
             case "dashboard":
                 return <Dashboard orders={orders} users={users} setOrders={setOrders} />;
             case "products":
-                return <ProductDisplay />;
+                return <ProductDisplay categories={categories} subCategories={subCategories} formData={formData} setFormData={setFormData} />;
             case "users":
                 return <UserDisplay users={users} setUsers={setUsers} />;
             case "settings":
@@ -60,6 +102,9 @@ export default function Admin({ logout }) {
 
             case "orders":
                 return <OrderDisplay orders={orders} setOrders={setOrders} />
+
+            case "Categories":
+                return <CategoryDisplay categories={categories} setCategories={setCategories} subCategories={subCategories} setSubCategories={setSubCategories} />
             default:
                 return <Dashboard users={users} setUsers={setUsers} />;
         }
@@ -84,6 +129,7 @@ export default function Admin({ logout }) {
                     <li className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>Users</li>
                     <li className={activeTab === "orders" ? "active" : ""} onClick={() => setActiveTab("orders")}>Orders</li>
                     <li className={activeTab === "settings" ? "active" : ""} onClick={() => setActiveTab("settings")}>Settings</li>
+                    <li className={activeTab === "Categories" ? "active" : ""} onClick={() => setActiveTab("Categories")}>Categories</li>
                 </ul>
             </aside>
 
@@ -103,8 +149,11 @@ export default function Admin({ logout }) {
                         </button>
                     </div>
                 </nav>
+                <div className='render'>
 
-                {renderContent()}
+                    {renderContent()}
+                </div>
+
 
 
             </div>

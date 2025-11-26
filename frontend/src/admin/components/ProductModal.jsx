@@ -1,86 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './productmodal.css';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
-
-export default function ProductModal() {
+export default function ProductModal({ onProductAdded, categories, subCategories, formData, setFormData }) {
     const [showModal, setShowModal] = useState(false);
-    const [categories, setCategories] = useState([])
-    const [subCategories, setSubCategories] = useState([])
-    const [formData, setFormData] = useState({
-        productName: '',
-        category: '',
-        subcategory: '',
-        price: '',
-        description: '',
-        quantity: 1
-
-    });
-
     const [images, setImages] = useState([]);
-
-
-
-    // Sub Categories
-
-    useEffect(() => {
-        const fetchSubcategories = async () => {
-            if (!formData.category) {
-                setSubCategories([]);
-                return;
-            }
-            try {
-                const res = await axios.get('http://localhost:5000/subcategories', {
-                    params: { category_id: formData.category }
-                });
-                setSubCategories(res.data);
-            } catch (error) {
-                console.error('Failed to fetch subcategories', error);
-            }
-        };
-        fetchSubcategories();
-    }, [formData.category], []);
-
-
-    // categories
-    useEffect(() => {
-
-        const getCategories = async () => {
-            try {
-                const res = await axios.get('http://localhost:5000/categories')
-
-                setCategories(res.data)
-
-            }
-            catch (err) {
-                console.log('cannot fetch categories')
-            }
-        }
-        getCategories()
-
-    }, [])
-
-
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        // Reset subcategory when category changes
         if (name === 'category') {
-            setFormData((prev) => ({
-                ...prev,
-                category: value,
-                subcategory: '',
-            }));
+            setFormData((prev) => ({ ...prev, category: value, subcategory: '' }));
         } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
+            setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
-
 
     const handleQuantityChange = (amount) => {
         setFormData((prevData) => {
@@ -93,7 +27,10 @@ export default function ProductModal() {
     };
 
     const handleImageChange = (e) => {
-        setImages(Array.from(e.target.files));
+        const files = Array.from(e.target.files);
+        setImages(files);
+
+        setFormData((prev) => ({ ...prev, thumbnailIndex: 0 }));
     };
 
     const handleSubmit = async (e) => {
@@ -107,7 +44,7 @@ export default function ProductModal() {
             form.append('price', formData.price);
             form.append('description', formData.description);
             form.append('quantity', formData.quantity);
-
+            form.append('thumbnailIndex', formData.thumbnailIndex); 
 
             images.forEach((img) => {
                 form.append('images', img);
@@ -117,13 +54,14 @@ export default function ProductModal() {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
-            console.log('Success:', response.data);
             Swal.fire({
                 icon: 'success',
                 title: 'Product added successfully!',
                 showConfirmButton: false,
                 timer: 1500,
             });
+
+            if (onProductAdded) onProductAdded();
 
             setShowModal(false);
             setFormData({
@@ -132,7 +70,8 @@ export default function ProductModal() {
                 subcategory: '',
                 price: '',
                 description: '',
-                quantity: 1
+                quantity: 1,
+                thumbnailIndex: 0
             });
             setImages([]);
         } catch (err) {
@@ -169,6 +108,7 @@ export default function ProductModal() {
                                         required
                                     />
                                 </div>
+
                                 <div>
                                     <label>Category</label>
                                     <select name="category" value={formData.category} onChange={handleChange} required>
@@ -180,9 +120,15 @@ export default function ProductModal() {
                                         ))}
                                     </select>
                                 </div>
+
                                 <div>
                                     <label>Subcategory</label>
-                                    <select name="subcategory" value={formData.subcategory} onChange={handleChange} required>
+                                    <select
+                                        name="subcategory"
+                                        value={formData.subcategory}
+                                        onChange={handleChange}
+                                        required
+                                    >
                                         <option value="">Select Subcategory</option>
                                         {subCategories.map((item) => (
                                             <option key={item.subcategory_id} value={item.subcategory_id}>
@@ -193,7 +139,6 @@ export default function ProductModal() {
                                 </div>
                             </div>
 
-                            {/* Row 2: Price + Quantity */}
                             <div className="form-row">
                                 <div>
                                     <label>Price</label>
@@ -216,7 +161,6 @@ export default function ProductModal() {
                                 </div>
                             </div>
 
-                            {/* Description */}
                             <label>Description</label>
                             <textarea
                                 name="description"
@@ -227,7 +171,6 @@ export default function ProductModal() {
                                 required
                             ></textarea>
 
-                            {/* Image Upload */}
                             <label>Upload Images (Max 5)</label>
                             <input
                                 type="file"
@@ -238,20 +181,44 @@ export default function ProductModal() {
                                 required
                             />
 
-                            {/* Image Preview */}
+
                             <div className="image-preview">
-                                {images.length > 0 &&
-                                    images.map((img, i) => (
+                                {images.map((img, i) => (
+                                    <div
+                                        key={i}
+                                        style={{
+                                            display: 'inline-block',
+                                            textAlign: 'center',
+                                            marginRight: '10px'
+                                        }}
+                                    >
                                         <img
-                                            key={i}
                                             src={URL.createObjectURL(img)}
                                             alt="preview"
-                                            style={{ width: '80px', marginRight: '8px', borderRadius: '8px' }}
+                                            style={{
+                                                width: '80px',
+                                                height: '80px',
+                                                borderRadius: '8px',
+                                                border:
+                                                    formData.thumbnailIndex === i
+                                                        ? '3px solid green'
+                                                        : '1px solid #ccc',
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    thumbnailIndex: i
+                                                }))
+                                            }
                                         />
-                                    ))}
+                                        <div style={{ fontSize: '12px' }}>
+                                            {formData.thumbnailIndex === i ? 'Thumbnail' : 'Select'}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
 
-                            {/* Actions */}
                             <div className="modal-actions">
                                 <button type="submit">Submit</button>
                                 <button

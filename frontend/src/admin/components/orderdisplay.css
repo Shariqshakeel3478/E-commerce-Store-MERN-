@@ -1,101 +1,109 @@
+/* ---------- Container ---------- */
 .table-container {
-  background: #fff;
-  padding: 25px 30px;
-  border-radius: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  margin: 20px auto;
   width: 95%;
-  transition: 0.3s ease;
+  margin: 40px auto;
+  padding: 25px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 5px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
 }
 
-.table-container:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-}
-
-h1 {
-  text-align: center;
-  color: #1e293b;
-  margin-bottom: 25px;
-  font-size: 1.8rem;
+.table-container h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #111827;
   letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
+/* ---------- Table ---------- */
 table {
   width: 100%;
   border-collapse: collapse;
-  font-family: "Inter", sans-serif;
-  font-size: 0.95rem;
+  overflow: hidden;
 }
 
 thead {
-  background-color: #1e293b;
-  color: #fff;
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  background: #f8fafc;
 }
 
-th, td {
-  padding: 14px 16px;
-  text-align: center;
-  border-bottom: 1px solid #e2e8f0;
+thead th {
+  padding: 14px 12px;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
-tr:hover {
-  background-color: #f9fafb;
+tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+tbody td {
+  padding: 14px 12px;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+/* ---------- Status Dropdown ---------- */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  outline: none;
   transition: 0.2s ease;
 }
 
-td {
-  color: #334155;
-}
-
-/* Dropdown for status */
-.status-badge {
-  border: none;
-  border-radius: 8px;
-  padding: 7px 14px;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  outline: none;
-  font-size: 0.9rem;
-  transition: 0.3s;
+/* Colors */
+.status-badge.pending {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fcd34d;
 }
 
 .status-badge.delivered {
-  background-color: #22c55e;
-}
-
-.status-badge.pending {
-  background-color: #facc15;
-  color: #222;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #6ee7b7;
 }
 
 .status-badge.cancelled {
-  background-color: #ef4444;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
 }
 
-/* Smooth hover animation */
-.status-badge:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
-
-/* Payment badge */
+/* ---------- Payment Status Badge ---------- */
 .payment-status {
-  font-weight: 600;
-  border-radius: 20px;
-  padding: 5px 10px;
-  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
+/* Payment Colors */
 .payment-status.paid {
-  background-color: #d1fae5;
-  color: #065f46;
+  background: #d1fae5;
+  color: #047857;
 }
 
 .payment-status.unpaid {
-  background-color: #fee2e2;
-  color: #991b1b;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.payment-status.pending {
+  background: #fef9c3;
+  color: #a16207;
 }

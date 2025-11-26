@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
         cb(null, "uploads/products");
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // unique filename
+        cb(null, Date.now() + path.extname(file.originalname));
     },
 });
 const upload = multer({
@@ -264,19 +264,28 @@ app.delete("/cart/remove/:productId", authenticate, (req, res) => {
 app.get("/cart", authenticate, (req, res) => {
     const userId = req.user.id;
     const query = `
-        SELECT cart.id AS cart_id, cart.quantity,
-        products.id AS product_id, products.name, products.price,
-        JSON_UNQUOTE(JSON_EXTRACT(products.images, '$[0]')) AS image,
-        products.category_id
+        SELECT 
+            cart.id AS cart_id,
+            cart.quantity,
+            p.id AS product_id,
+            p.name,
+            p.price,
+            p.category_id,
+            i.image_path AS image
         FROM cart
-        JOIN products ON cart.product_id = products.id
+        JOIN products p ON cart.product_id = p.id
+        LEFT JOIN product_images i 
+            ON p.id = i.product_id AND i.is_thumbnail = 1
         WHERE cart.user_id = ?;
     `;
 
     db.query(query, [userId], (err, results) => {
-        if (err) return res.status(500).json({
-            error: "DB Error"
-        });
+        if (err) {
+            console.error("Cart DB Error:", err.sqlMessage);
+            return res.status(500).json({
+                error: err.sqlMessage
+            });
+        }
 
         res.json(results);
         console.log("Cart API userId:", userId);
@@ -304,19 +313,132 @@ app.post("/logout", authenticate, (req, res) => {
 
 // Products api
 app.get('/products', async (req, res) => {
+    const query = `
+        SELECT 
+            p.id AS product_id,
+            p.name AS product_name,
+            p.price,
+            p.description,
+            p.quantity,
+            c.category_id,
+            c.category_name,
+            i.id AS image_id,
+            i.image_path,
+            i.is_thumbnail
+        FROM products p
+        LEFT JOIN categories c 
+            ON p.category_id = c.category_id
+        LEFT JOIN product_images i 
+            ON p.id = i.product_id
+    `;
 
-    db.query('SELECT * FROM products', (err, result) => {
-        if (err) return res.status(500).json({
-            error: "Database Error"
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({
+                error: "Database Error"
+            });
+        }
+
+
+        const productsMap = {};
+
+        result.forEach(row => {
+            if (!productsMap[row.product_id]) {
+                productsMap[row.product_id] = {
+                    product_id: row.product_id,
+                    name: row.product_name,
+                    price: row.price,
+                    description: row.description,
+                    quantity: row.quantity,
+                    category_id: row.category_id,
+                    category_name: row.category_name,
+                    images: []
+                };
+            }
+
+            if (row.image_id) {
+                productsMap[row.product_id].images.push({
+                    image_id: row.image_id,
+                    image_path: row.image_path,
+                    is_thumbnail: row.is_thumbnail
+                });
+            }
         });
 
-        res.json(result);
-    })
+        // Convert map to array
+        const products = Object.values(productsMap);
+
+        res.json(products);
+    });
+});
 
 
+// single product api
 
-})
+app.get('/products/:productId', async (req, res) => {
+    const productId = req.params.productId;
 
+    const query = `
+        SELECT 
+            p.id AS product_id,
+            p.name AS product_name,
+            p.price,
+            p.description,
+            p.quantity,
+            p.category_id,
+            c.category_name,
+            i.id AS image_id,
+            i.image_path,
+            i.is_thumbnail
+        FROM products p
+        LEFT JOIN categories c 
+            ON p.category_id = c.category_id
+        LEFT JOIN product_images i 
+            ON p.id = i.product_id
+        WHERE p.id = ?
+    `;
+
+    db.query(query, [productId], (err, result) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({
+                error: "Database Error"
+            });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({
+                error: "Product not found"
+            });
+        }
+
+
+        const product = {
+            product_id: result[0].product_id,
+            name: result[0].product_name,
+            price: result[0].price,
+            description: result[0].description,
+            quantity: result[0].quantity,
+            category_id: result[0].category_id,
+            category_name: result[0].category_name,
+            images: []
+        };
+
+        // Add images
+        result.forEach(row => {
+            if (row.image_id) {
+                product.images.push({
+                    image_id: row.image_id,
+                    image_path: row.image_path,
+                    is_thumbnail: row.is_thumbnail
+                });
+            }
+        });
+
+        res.json(product);
+    });
+});
 
 
 // Payment Gateway
@@ -472,66 +594,67 @@ app.post('/orders', (req, res) => {
 
 
 
-app.post('/addproduct', upload.array("images", 5), (req, res) => {
-    try {
-        const {
-            productName,
-            category,
-            subcategory,
-            price,
-            description,
-            quantity
-        } = req.body;
+app.post('/addproduct', upload.array('images', 5), (req, res) => {
+    const {
+        productName,
+        category,
+        subcategory,
+        price,
+        description,
+        quantity,
+        thumbnailIndex
+    } = req.body;
+    const images = req.files;
 
-        if (!productName || !category || !subcategory || !price || !description || !quantity) {
-            return res.status(400).json({
-                error: 'Please fill all required fields'
-            });
-        }
-
-        if (!req.files || req.files.length === 0) {
-            return res.status(400).json({
-                error: 'Please upload at least one image'
-            });
-        }
-
-        const imagePaths = req.files.map(file => `/uploads/products/${file.filename}`);
-
-        const sql = `
-      INSERT INTO products 
-      (name, price, subcategory_id, description, quantity, images,category_id) 
-      VALUES (?, ?, ?, ?, ?, ?,?)
-    `;
-
-        const values = [
-            productName,
-            price,
-            subcategory,
-            description,
-            quantity,
-            JSON.stringify(imagePaths),
-            category
-        ];
-
-        db.query(sql, values, (err, result) => {
-            if (err) {
-                console.error("Database error:", err);
-                return res.status(500).json({
-                    error: "Database insert failed"
-                });
-            }
-            res.status(200).json({
-                message: "Product added successfully",
-                productId: result.insertId,
-            });
-        });
-    } catch (error) {
-        console.error("Unexpected error:", error);
-        res.status(500).json({
-            error: 'Something went wrong'
+    if (!images || images.length === 0) {
+        return res.status(400).json({
+            message: "No images uploaded"
         });
     }
+
+    const insertProductQuery = `
+        INSERT INTO products (name, category_id, subcategory_id, price, description, quantity)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(insertProductQuery, [productName, category, subcategory, price, description, quantity], (err, result) => {
+        if (err) {
+            console.error("Error inserting product:", err);
+            return res.status(500).json({
+                message: "Product insert failed"
+            });
+        }
+
+        const productId = result.insertId;
+
+        // 👇 Mark selected thumbnail true
+        const imageValues = images.map((file, index) => [
+            productId,
+            `/uploads/products/${file.filename}`,
+            index == thumbnailIndex ? true : false
+        ]);
+
+        const insertImagesQuery = `
+            INSERT INTO product_images (product_id, image_path, is_thumbnail)
+            VALUES ?
+        `;
+
+        db.query(insertImagesQuery, [imageValues], (imgErr) => {
+            if (imgErr) {
+                console.error("Error inserting images:", imgErr);
+                return res.status(500).json({
+                    message: "Image insert failed"
+                });
+            }
+
+            return res.status(200).json({
+                message: "Product added successfully"
+            });
+        });
+    });
 });
+
+
 
 
 
@@ -587,7 +710,8 @@ app.put('/editproduct/:id', upload.array("images", 5), (req, res) => {
         subcategory,
         price,
         description,
-        quantity
+        quantity,
+        thumbnailIndex
     } = req.body;
 
     if (!productName || !category || !subcategory || !price || !description || !quantity) {
@@ -596,43 +720,69 @@ app.put('/editproduct/:id', upload.array("images", 5), (req, res) => {
         });
     }
 
-    // Handle uploaded images
-    let imagePaths = null;
-    if (req.files && req.files.length > 0) {
-        imagePaths = JSON.stringify(
-            req.files.map(file => `/uploads/products/${file.filename}`)
-        );
-    }
 
-    // Build SQL query dynamically
-    let sql = `
+    const updateProductQuery = `
         UPDATE products
         SET name = ?, price = ?, subcategory_id = ?, description = ?, quantity = ?, category_id = ?
+        WHERE id = ?
     `;
-    const values = [productName, price, subcategory, description, quantity, category];
 
-    if (imagePaths) {
-        sql += `, images = ?`;
-        values.push(imagePaths);
-    }
+    const updateValues = [
+        productName,
+        price,
+        subcategory,
+        description,
+        quantity,
+        category,
+        id
+    ];
 
-    sql += ` WHERE id = ?`;
-    values.push(id);
-
-    db.query(sql, values, (err, result) => {
+    db.query(updateProductQuery, updateValues, (err, result) => {
         if (err) {
             console.error("Error updating product:", err);
             return res.status(500).json({
                 message: "Error updating product"
             });
         }
+
         if (result.affectedRows === 0) {
             return res.status(404).json({
                 message: "Product not found"
             });
         }
-        res.json({
-            message: "Product updated successfully"
+
+        // Step 2: Handle uploaded images
+        const files = req.files;
+
+        if (!files || files.length === 0) {
+            return res.json({
+                message: "Product updated successfully (no new images)"
+            });
+        }
+
+        // Step 3: Insert new images into product_images table
+        const insertImageQuery = `
+            INSERT INTO product_images (product_id, image_path, is_thumbnail)
+            VALUES ?
+        `;
+
+        const imageValues = files.map((file, index) => [
+            id,
+            `/uploads/products/${file.filename}`,
+            index == thumbnailIndex ? true : false
+        ]);
+
+        db.query(insertImageQuery, [imageValues], (imgErr, imgRes) => {
+            if (imgErr) {
+                console.error("Error inserting images:", imgErr);
+                return res.status(500).json({
+                    message: "Image upload failed"
+                });
+            }
+
+            return res.json({
+                message: "Product updated with new images"
+            });
         });
     });
 });
@@ -640,9 +790,8 @@ app.put('/editproduct/:id', upload.array("images", 5), (req, res) => {
 
 
 
-//delete api
 
-// Delete product API
+
 app.delete('/delproduct/:id', (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({

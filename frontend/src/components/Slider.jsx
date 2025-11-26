@@ -1,43 +1,86 @@
 import React, { useState, useEffect } from "react";
 import "../styles/slider.css";
+import img1 from '../assets/images/pexels-thepaintedsquare-583842.jpg'
 
-const images = [
-    "https://t3.ftcdn.net/jpg/04/65/46/52/360_F_465465254_1pN9MGrA831idD6zIBL7q8rnZZpUCQTy.jpg",
-    "https://plus.unsplash.com/premium_photo-1661658740167-45b56833412b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"]
 export default function Slider() {
-    const [current, setCurrent] = useState(0);
+    const [currentSlide, setCurrentSlide] = useState(0);
 
+    const slides = [
+        {
+            id: 1,
+            title: "Summer Collection 2025",
+            description: "Discover the latest trends with premium outfits and unbeatable deals.",
+            buttonText: "Shop Now",
+            image: img1
+        },
+        {
+            id: 2,
+            title: "New Tech Gadgets",
+            description: "Upgrade your tech life with the latest devices and accessories.",
+            buttonText: "Explore Tech",
+            image: img1
+        },
+        {
+            id: 3,
+            title: "Home & Living",
+            description: "Give your home a fresh new look with our modern interior collection.",
+            buttonText: "Discover Home",
+            image: img1
+        }
+    ];
 
     useEffect(() => {
         const interval = setInterval(() => {
-            nextSlide();
-        }, 3000);
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 6000);
+
         return () => clearInterval(interval);
-    }, [current]);
+    }, [slides.length]);
 
-    const nextSlide = () => {
-        setCurrent((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-    };
+    const goToSlide = (index) => setCurrentSlide(index);
 
-    const prevSlide = () => {
-        setCurrent((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-    };
+    const nextSlide = () =>
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+
+    const prevSlide = () =>
+        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
     return (
         <section className="hero">
-            <div className="hero-content">
-                <h1>Discover Modern Living</h1>
-                <p>
-                    Upgrade your lifestyle with our curated collection of premium products.
-                    Designed for elegance, made for comfort.
-                </p>
-                <div className="hero-buttons">
-                    <button className="btn primary">Shop Now</button>
-                    <button className="btn secondary">Learn More</button>
-                </div>
+            <div className="slider">
+                {slides.map((slide, index) => (
+                    <div
+                        key={slide.id}
+                        className={`slide ${index === currentSlide ? "active" : ""}`}
+                        style={{ backgroundImage: `url(${slide.image})` }}
+                    >
+                        <div className="slide-overlay"></div>
+
+                        <div className="slide-content">
+                            <h1>{slide.title}</h1>
+                            <p>{slide.description}</p>
+                            <a href="#" className="btn">{slide.buttonText}</a>
+                        </div>
+                    </div>
+                ))}
             </div>
-            <div className="hero-image">
-                <img src="https://mobilo.pk/wp-content/uploads/2024/10/mobilo-mobile-shop-and-accessories-1024x959.webp" alt="Modern product" />
+
+            <div className="slider-controls">
+                {slides.map((_, index) => (
+                    <div
+                        key={index}
+                        className={`slider-dot ${index === currentSlide ? "active" : ""}`}
+                        onClick={() => goToSlide(index)}
+                    ></div>
+                ))}
+            </div>
+
+            <div className="slider-nav slider-prev" onClick={prevSlide}>
+                <i className="fas fa-chevron-left"></i>
+            </div>
+
+            <div className="slider-nav slider-next" onClick={nextSlide}>
+                <i className="fas fa-chevron-right"></i>
             </div>
         </section>
     );

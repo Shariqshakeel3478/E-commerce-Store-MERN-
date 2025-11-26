@@ -7,14 +7,20 @@ export default function Categorytab({
     subcategories,
     onCategorySelect,
     onSubcategorySelect,
+    products
 }) {
     const [activeCategoryId, setActiveCategoryId] = useState("all");
 
     const handleCategoryClick = (cat) => {
-        setActiveCategoryId(cat.category_id || "all");
-        onCategorySelect(cat);
-        onSubcategorySelect(null);
+
+        const selectedCategory = cat;
+        setActiveCategoryId(selectedCategory.category_id)
+        const result = products.filter(res => res.category_id === selectedCategory.category_id)
+        console.log(result)
+        console.log(activeCategoryId)
     };
+
+
 
     return (
         <div className="tabs">
@@ -58,5 +64,7 @@ export default function Categorytab({
             )}
         </div>
     );
+
+
 
 }

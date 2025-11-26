@@ -1,66 +1,64 @@
-import '../styles/navbar.css'
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import Swal from 'sweetalert2'
-import { useCart } from './CartContext'
+import '../styles/navbar.css';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useCart } from './CartContext';
 
-
-
-export default function Navbar({ onOpenSidebar, products, logout, isAuthenticated, setIsAuthenticated }) {
-
-
-    const [searchterm, setSearchTerm] = useState('')
-    const [searchItems, setSearchItems] = useState([])
+export default function Navbar({ onOpenSidebar, products, logout, isAuthenticated }) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchItems, setSearchItems] = useState([]);
     const [showResults, setShowResults] = useState(false);
-    const [totalItems, setTotalItems] = useState(3);
-
-
-
-    const { cart, setCart } = useCart();
-
-
-
-
-
-
-
-
-
+    const { cart } = useCart();
 
     const changeSearch = (e) => {
-
-        let value = e.target.value;
-        setSearchTerm(value)
-
+        const value = e.target.value;
+        setSearchTerm(value);
         if (value === '') {
-            setSearchItems([])
+            setSearchItems([]);
+        } else {
+            const filtered = products.filter(p =>
+                p.name.toLowerCase().includes(value.toLowerCase())
+            );
+            setSearchItems(filtered);
         }
-        else {
-            let filtered = products.filter(p => p.name.toLowerCase().includes(value.toLowerCase()))
-            setSearchItems(filtered)
-        }
-    }
-
-
+    };
 
     return (
         <>
-
-            <div className='navbar'>
-
-                <div className='nav-left'>
-                    <div className='logo'>My Store</div>
+            {/* TOP INFO BAR */}
+            <div className="top-bar">
+                <div className="left-info">
+                    <p><i className="fa-solid fa-location-dot"></i> 123 Main Street, Anywhere USA</p>
+                    <p><i className="fa-solid fa-phone"></i> +1 (555) 123-4567</p>
                 </div>
+                <div className="right-info">
+                    <select>
+                        <option>USD</option>
+                        <option>PKR</option>
+                    </select>
+                    <select>
+                        <option>English</option>
+                        <option>Urdu</option>
+                    </select>
+                </div>
+            </div>
 
+            {/* MAIN NAVBAR */}
+            <div className='navbar'>
+                <div className='nav-left'>
+                    <div className='logo'>
+                        e<span>-Shop</span>
+                    </div>
+                </div>
 
                 <div className='nav-center'>
                     <div className='search'>
                         <input
                             onFocus={() => setShowResults(true)}
-                            onBlur={() => setShowResults(false)}
+                            onBlur={() => setTimeout(() => setShowResults(false), 200)}
                             onChange={changeSearch}
                             type="text"
-                            placeholder='Find your product here'
+                            placeholder='Search products, brands...'
+                            value={searchTerm}
                         />
                         <button>
                             <i className="fa-solid fa-magnifying-glass"></i>
@@ -69,7 +67,7 @@ export default function Navbar({ onOpenSidebar, products, logout, isAuthenticate
                             <div className='search-results'>
                                 <ul>
                                     {searchItems.length === 0
-                                        ? <li>No items to display</li>
+                                        ? <li>No results found</li>
                                         : searchItems.map((item, index) => (
                                             <li key={index}>{item.name}</li>
                                         ))
@@ -80,40 +78,38 @@ export default function Navbar({ onOpenSidebar, products, logout, isAuthenticate
                     </div>
                 </div>
 
-
                 <div className='nav-right'>
-                    <div className='nav-btns'>
-                        {!isAuthenticated ? (
-                            <Link style={{ color: "white", textDecoration: "none" }} to="/login"><button>
-                                <i className="fa-solid fa-circle-user"></i>Login
-                            </button></Link>
-
-                        ) : (
-                            <button className='logout-btn' onClick={logout}>
-                                <i className="fa-solid fa-circle-user"></i>
-                                Logout
+                    {!isAuthenticated ? (
+                        <Link to="/login">
+                            <button className='nav-btn'>
+                                <i className="fa-solid fa-user"></i> Login
                             </button>
-                        )}
-                        <button className="cart-container" onClick={onOpenSidebar}>
-                            <div className="cart-icon"><i className="fa-solid fa-bag-shopping"></i></div>
-                            {totalItems > 0 && <div className="cart-count">{cart.length}</div>}
+                        </Link>
+                    ) : (
+                        <button className='nav-btn' onClick={logout}>
+                            <i className="fa-solid fa-user"></i> Logout
                         </button>
-                    </div>
+                    )}
+
+                    <button className="cart-container" onClick={onOpenSidebar}>
+                        <i className="fa-solid fa-cart-shopping"></i>
+                        {cart.length > 0 && <div className="cart-count">{cart.length}</div>}
+                    </button>
                 </div>
-            </div >
+            </div>
 
-
-            <div className="nav-bottom" >
+            {/* NAV LINKS BAR */}
+            <div className="nav-bottom">
                 <ul>
-                    <li>Home</li>
-                    <li>About</li>
-                    <li>Categories</li>
+                    <li>All Categories</li>
                     <li>Products</li>
+                    <li>Blog</li>
+                    <li>Contact</li>
+                    <li className="highlight">LIMITED SALE</li>
+                    <li>Best Seller</li>
+                    <li>New Arrival</li>
                 </ul>
             </div>
         </>
-
-
-
-    )
+    );
 }
