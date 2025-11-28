@@ -61,8 +61,8 @@ export default function Products({ products, setProducts, categories, subcategor
                     const isLiked = likedItems.includes(product.product_id);
 
                     return (
-                        <div onClick={() => productOpen(product.product_id)} className="card" data-badge={product.badge} key={product.product_id}>
-                            <img
+                        <div className="card" data-badge={product.badge} key={product.product_id}>
+                            <img onClick={() => productOpen(product.product_id)}
                                 src={
                                     (() => {
                                         const img = product.images;

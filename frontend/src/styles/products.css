@@ -131,7 +131,7 @@
   letter-spacing: 0.6px;
 }
 
-/* RESPONSIVE */
+
 @media (max-width: 768px) {
   .product-cards {
     padding: 20px;
